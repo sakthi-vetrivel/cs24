@@ -34,10 +34,8 @@ int main(int argc, char **argv) {
 int count_onebits(unsigned int n) {
     int bits = 0;
     while (n > 0) {
-      if ((n & 1) == 1) {
-        bits++;
-      }
-      n = n >> 1;
+      n = n & (n - 1);
+      bits++;
     }
     return bits;
 }
