@@ -52,10 +52,53 @@ void alu_eval(ALU *alu) {
 
     result = 0;
 
-    /*======================================*/
-    /* TODO:  Implement the ALU logic here. */
-    /*======================================*/
+    switch (aluop) {
+
+      case ALUOP_ADD:
+        result = A + B;
+        break;
+
+      case ALUOP_INV:
+        result = ~A;
+        break;
+
+      case ALUOP_SUB:
+        result = A - B;
+        break;
+
+      case ALUOP_AND:
+        result = A & B;
+        break;
+
+      case ALUOP_OR:
+        result = A | B;
+        break;
+
+      case ALUOP_XOR:
+        result = A ^ B;
+        break;
+
+      case ALUOP_SLL:
+      case ALUOP_SLA:
+        result = A << 1;
+        break;
+
+      case ALUOP_SRL:
+        result = A >> 1;
+        break;
+
+      case ALUOP_SRA:
+        result = (uint32_t) ((int32_t) A >> 1);
+        break;
+
+      case ALUOP_INCR:
+        result = A + 1;
+        break;
+
+      default:
+        result = 0;
+        break;
+    }
 
     pin_set(alu->out, result);
 }
-

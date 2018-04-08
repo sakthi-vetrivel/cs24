@@ -22,7 +22,7 @@
 typedef struct ProgramCounter {
     /*! This is the program counter signal itself. */
     pin pc_pin;
-    
+
     /*!
      * This signal tells the program counter when to branch.  It should be set
      * to BRANCH if the nextPC() function should jump to branch_addr, or it
@@ -30,13 +30,13 @@ typedef struct ProgramCounter {
      * instruction.
      */
     pin branch;
-    
+
     /*!
      * When the branch pin tells the program counter to branch, this is the
      * address that the program counter jumps to.
      */
     pin branch_addr;
-    
+
 } ProgramCounter;
 
 
@@ -49,4 +49,3 @@ void nextPC(ProgramCounter *pc);
 
 
 #endif /* BRANCHING_PROGRAM_COUNTER_H */
-

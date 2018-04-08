@@ -1,8 +1,8 @@
-0009	#dividend
-0010	#divisor
-0000	#counter
-001f	#31
-0000	#this is where the bit shifting occurs
-0000	#0
-0000	#quotient
-0000	#remainder
+00000009	#dividend
+00000010	#divisor
+80000000	#bit mask
+00000001	#constant 1
+ffffffff	#test_result
+ffffffff	# empty
+ffffffff	#quotient
+ffffffff	#remainder

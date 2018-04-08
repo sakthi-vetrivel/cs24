@@ -1,0 +1,146 @@
+psuedocode
+
+quotient = 0
+remainder = dividend
+
+while true do
+  remainder = remainder - divisor
+  if remainder != 0 then
+    quotient = quotient + 1
+  else
+    break
+  end if
+done
+
+while remainder < 0
+  remainder = remainder + divisor
+done
+
+
+0 XOR quotient, quotient, quotient
+1 ADD dividend, quotient, remainder
+
+QUOTIENT:
+2 SUB remainder, divisor, remainder
+3 AND remainder, bit_mask, test_result
+4 BNZ test_result, REMAINDER
+5 INCR quotient, quotient
+
+6 BNZ 1, QUOTIENT
+
+REMAINDER:
+7 AND remainder, bit_mask, test_result
+8 SUB bitmask, test_result, test_result
+9 BNZ test_result, done
+10 ADD remainder, divisor, remainder
+11 BNZ 1 REMAINDER
+
+Done:
+12 DONE
+
+R0 - dividend
+R1 - divisor
+R2- 0x80000000
+R3 - 1
+R4 - test_result
+R5 - empty
+R6 - quotient
+R7 - remainder
+
+
+0 XOR R6, R6, R6 # set quotient to 0
+1 ADD R0, R6, R7 # set remainder to dividend
+
+QUOTIENT:
+2  SUB R7, R1, R7
+3  AND R7, R2, R4
+4  BNZ R4, REMAINDER
+5  INCR R6, R6
+
+6  BNZ R3, QUOTIENT
+
+REMAINDER:
+7  AND R7, R2, R4
+8  SUB R2, R4, R4
+9  BNZ R4, done
+10  ADD, R7, R1, R7
+11  BNZ R3, REMAINDER
+
+Done:
+12  DONE
+
+
+000 - dividend
+001 - divisor
+010- 0x80000000
+011 - 1
+100 - test_result
+101 - empty
+110 - quotient
+111 - remainder
+
+0 XOR 110, 110, 110 # set quotient to 0
+1 ADD 000, 110, 111 # set remainder to dividend
+
+QUOTIENT:
+2  SUB 111, 001, 111
+3  AND 111, 010, 100
+4  BNZ 100, REMAINDER
+5  INCR 110, 110
+
+6  BNZ 011, QUOTIENT
+
+REMAINDER:
+7  AND 111, 010, 100
+8  SUB 010, 100, 100
+9  BNZ 100, done
+10  ADD, 111, 001, R7
+11  BNZ 011, REMAINDER
+
+Done:
+12  DONE
+
+SUB - 0010
+ADD - 0000
+BNZ - 1010
+INCR - 0101
+AND - 1000
+
+0 0011 1 110 110 110 # set quotient to 0
+1 0000 1 000 110 111 # set remainder to dividend
+
+QUOTIENT:
+2  0010 1 111 001 111
+3  1000 1 111 010 100
+4  1010 0 100 000111
+5  0101 1 110 110
+
+6  1010 0 011 000010
+
+REMAINDER:
+7  1000 1 111 010 100
+8  0010 1 010 100 100
+9  1010 0 100 001100
+10  0000 1 111 001 111
+11  1010 0 011 000111
+
+DONE:
+12  1111 0 000 000 000
+
+hexcode:
+0fb6    # set quotient to 0
+0237    # set remainder to dividend
+# QUOTIENT:
+0bcf
+23d4
+2907
+02f6
+28c2
+# REMAINDER:
+23d4
+0aa4
+290c
+03cf
+28c7
+# DONE:
+3c00

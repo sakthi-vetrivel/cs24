@@ -153,6 +153,10 @@ uint32_t convert(const char *bits) {
 
     assert(length <= 16);
 
+    value = 0;
+    for (int i = 0; i < length; i++) {
+      value = (value << 1) | (bits[i] == '1' ? 1 : 0);
+    }
     /*=============================================================*/
     /* TODO:  Implement this part of the function!                 */
     /*                                                             */

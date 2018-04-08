@@ -1,8 +1,8 @@
-000f	#dividend
-0005	#divisor
-0000	#counter
-001f	#31
-0000	#B
-0000	#0
-0000	#quotient
-0000	#remainder
+0000000f	#dividend
+00000005	#divisor
+80000000	#bit mask
+00000001	#constant 1
+ffffffff	#test_result
+ffffffff	# empty
+ffffffff	#quotient
+ffffffff	#remainder

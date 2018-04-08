@@ -1,0 +1,13 @@
+0fb6    # R6 <- R6 ^ R6                     quotient = 0
+0237    # R7 <- R0 + R6                     remainder = dividend
+0bcf    # QUOTIENT LOOP_TOP: R7 = R7 - R1   remainder = remainder - divisor
+23d4    # R4 <- R7 & R2                     extract sign bit
+2907    # BNZ R4 to REMAINDER LOOP_TOP
+02f6    # R6 <- R6 + 1                      quotient++
+28c2    # BNZ R3 to QUOTIENT LOOP_TOP
+23d4    # REMAINDER LOOP_TOP: R4 <- R7 & R2 extract sign bit
+0aa4    # R4 = R2 - R4                      test_result = 0x8000000 - test_result
+290c    # BNZ R4 to DONE LOOP_TOP           check if test_result is positive
+03cf    # R7 <- R1 + R7                     remainder = remainder + divisor
+28c7    # BNZ R3 to REMAINDER LOOP_TOP      while true
+3c00    # DONE LOOP_TOP: done               done
