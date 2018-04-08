@@ -27,8 +27,6 @@ float my_fsum(FloatArray *floats) {
     float sum = 0;
     // compensation term to gather lost significant bits
     float c = 0;
-    // iterator for list of floats
-    int i;
     // for each float
     for (int i = 0; i < floats->count; i++) {
       // include the lost bits for the last calculation
@@ -74,9 +72,8 @@ int main() {
     printf("Sum computed in order of increasing magnitude:  %e\n", sum2);
     printf("Sum computed in order of decreasing magnitude:  %e\n", sum3);
 
-    /* TODO:  UNCOMMENT WHEN READY!
+
     printf("My sum:  %e\n", my_sum);
-    */
 
     return 0;
 }

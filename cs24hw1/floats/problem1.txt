@@ -3,7 +3,9 @@ CS:APP3e Practice Problem 2.46, pp.111-112:
 
 A.
 
-Since the program only saves 23 bits after the decimal point, 0.1 - x is represented in binary as 0.0...01100[1100] where there are 23 zero-bit before the most significant one-bit.
+Since the program only saves 23 bits after the decimal point, 0.1 - x is
+represented in binary as 0.0...01100[1100] where there are 23 zero-bit
+before the most significant one-bit.
 
 B.
 0.1 - x = 0.0...01100[1100]
