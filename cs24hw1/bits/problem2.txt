@@ -1,6 +1,15 @@
 Expression:  n = n & (n - 1)
 ----------------------------
-If n is represented as a bit pattern, then the bit pattern representing n - 1 is almost exactly the same except for the least significant one bit and the bits following that bit, so ...10...0 becomes ...01...1, so when these two bit patterns are anded, we get no change in the more significant bits, but the least significant ones bit is zeroed and so are the bits following it. However, these were zero-bits in n, so the only change in the zeroing out of the least significant ones bit.
+If n is represented as a bit pattern, then the bit pattern representing n - 1
+is almost exactly the same except for the least significant one bit and the
+bits following that bit, so ...10...0 becomes ...01...1, so when these two bit
+patterns are anded, we get no change in the more significant bits, but the least
+significant ones bit is zeroed and so are the bits following it. However, these
+were zero-bits in n, so the only change in the zeroing out of the least
+significant ones bit.
+
 This expression zeros out the least significant one bit in n.
 
-We can use this to count the one-bits in a value faster because instead of inspecting each bit in the value's bit pattern, the algorithm will run linearly with the number of 1's in the bit representation.
+We can use this to count the one-bits in a value faster because instead of
+inspecting each bit in the value's bit pattern, the algorithm will run linearly
+ with the number of 1's in the bit representation.
