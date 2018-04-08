@@ -1,0 +1,8 @@
+0013	#dividend
+0004	#divisor
+0000	#counter
+001f	#31
+0000	#this is where the bit shifting occurs
+0000	#0
+0000	#quotient
+0000	#remainder                                                               

@@ -1,0 +1,28 @@
+When we run 10 divided by 0, we get an infinite loop.
+
+Let's take a look at our pseudocode:
+
+quotient = 0
+remainder = dividend
+
+while (true) {
+	remainder = remainder - divisor
+	b = remainder
+	counter = 0
+	if (remainder >= 0) {
+		quotient++
+	}
+	else {
+		break
+	}
+}
+remainder = remainder + dividend
+
+
+Our first step is to set the remainder to be the dividend.
+Then, we enter our while loop, subtracting the divisor from the remainder
+and incrementing the quotient, until the remainder is less than zero.
+However, the remainder value never changes because the only
+modification is a subtraction of zero from the remainder. As a result,
+the remainder is never less than zero and we never break out of the while
+loop, and the program doesn't terminates.
