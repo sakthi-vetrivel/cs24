@@ -20,10 +20,27 @@ float fsum(FloatArray *floats) {
     return sum;
 }
 
-
-/* TODO:  IMPLEMENT my_fsum().  MAKE SURE TO EXPLAIN YOUR CODE IN COMMENTS. */
 float my_fsum(FloatArray *floats) {
-    return 0;
+    // implementation of the Kahan algorithm
+    assert(floats != NULL);
+    // running sum
+    float sum = 0;
+    // compensation term to gather lost significant bits
+    float c = 0;
+    // iterator for list of floats
+    int i;
+    // for each float
+    for (int i = 0; i < floats->count; i++) {
+      // include the lost bits for the last calculation
+      float a = floats->values[i] - c;
+      // add next value
+      float nextsum = sum + a;
+      // calculate bits not accounted for
+      c = (nextsum - sum) - a;
+      sum = nextsum;
+    }
+
+    return sum;
 }
 
 
@@ -63,4 +80,3 @@ int main() {
 
     return 0;
 }
-

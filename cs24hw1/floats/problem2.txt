@@ -1,11 +1,23 @@
 Part A:
 -------
+These results are different because the numbers are added in different
+orders. The order affects the final product because in the addition of floats
+the number of digits considered is limited. For example, when we add
+a very small float to a very large float, the bits from the very small
+float will be lost. As a result, it's best to add the smaller floats
+first, so they could potentially snowball into a larger number that
+might be larger enough to be considered when add to a larger float.
+Thus, adding floats in increasing order will yield the most accurate
+result
 
+This approach is limited because if we sum very large numbers of roughly
+the same magnitude, then those numbers may be insignificant compared
+to the running sum, so the sum would once again be inaccurate.
 
 
 Part B:
 -------
-
-
-
-
+This approach is able to produce an accurate sum, because
+at every addition of another float to the running sum,
+we keep track of the lost bits in a compensation term, adding
+those lost bits back to the sum in addition of the next term.
