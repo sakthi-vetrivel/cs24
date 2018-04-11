@@ -49,50 +49,59 @@ void alu_eval(ALU *alu) {
     A = pin_read(alu->in1);
     B = pin_read(alu->in2);
     aluop = pin_read(alu->op);
-
     result = 0;
-
     switch (aluop) {
-
+      // add two integers
       case ALUOP_ADD:
         result = A + B;
         break;
 
-      case ALUOP_INV:
-        result = ~A;
-        break;
-
+      //subtract two integerrs
       case ALUOP_SUB:
         result = A - B;
         break;
 
+      //increment integer by one
+      case ALUOP_INCR:
+        result = A + 1;
+        break;
+
+      // negates each individual bit in A
+      case ALUOP_INV:
+        result = ~A;
+        break;
+
+      // bitwise AND on two integers
       case ALUOP_AND:
         result = A & B;
         break;
 
+      // bitwise OR on two integers
       case ALUOP_OR:
         result = A | B;
         break;
 
+      // bitwise exclusive OR on two integers
       case ALUOP_XOR:
         result = A ^ B;
         break;
 
+      // shift left logical and arithmetic
+      // recall that with the left shift there is no difference
+      // in implementation
       case ALUOP_SLL:
       case ALUOP_SLA:
         result = A << 1;
         break;
 
+      // shift right logical of an integer
       case ALUOP_SRL:
         result = A >> 1;
         break;
 
+      // shift right arithmetic of an integer
       case ALUOP_SRA:
         result = (uint32_t) ((int32_t) A >> 1);
-        break;
-
-      case ALUOP_INCR:
-        result = A + 1;
         break;
 
       default:
