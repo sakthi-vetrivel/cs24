@@ -21,24 +21,32 @@ float fsum(FloatArray *floats) {
 }
 
 float my_fsum(FloatArray *floats) {
-    // implementation of the Kahan algorithm
+    // implementation of the pairwise summation
     assert(floats != NULL);
-    // running sum
-    float sum = 0;
-    // compensation term to gather lost significant bits
-    float c = 0;
-    // for each float
-    for (int i = 0; i < floats->count; i++) {
-      // include the lost bits for the last calculation
-      float a = floats->values[i] - c;
-      // add next value
-      float nextsum = sum + a;
-      // calculate bits not accounted for
-      c = (nextsum - sum) - a;
-      sum = nextsum;
+    // if the array is small
+    if (floats->count < 3) {
+      // just sum up all of the values
+      float s = floats->values[0];
+      for (int i = 1; i < floats->count; i++) {
+        s = s + floats->values[i];
     }
-
-    return sum;
+    else {
+      // find where to split the array
+      float m = floor(floats->count / 2)
+      // split into two arrays
+      FloatArray *firstHalf;
+      FloatArray *secondtHalf;
+      firstHalf->values = floats->values[0];
+      firstHalf->count = m;
+      secondHalf->values = floats->values[m];
+      secondHalf->count = floats->count - m;
+      // recursive function call on the two halves
+      s = my_fsum(firstHalf) + my_fsum(secondHalf);
+      // free the pointers
+      free(firstHalf);
+      free(secondHalf);
+    }
+    return s;
 }
 
 
