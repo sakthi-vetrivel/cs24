@@ -109,4 +109,3 @@ void sort_decmag(FloatArray *floats) {
     assert(floats != NULL);
     qsort(floats->values, floats->count, sizeof(float), cmp_dec_fmag);
 }
-

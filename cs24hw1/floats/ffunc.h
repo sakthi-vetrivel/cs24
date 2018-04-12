@@ -20,4 +20,3 @@ void sort_incmag(FloatArray *floats);
 void sort_decmag(FloatArray *floats);
 
 #endif /* FFUNC_H */
-
