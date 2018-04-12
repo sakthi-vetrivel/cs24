@@ -22,29 +22,58 @@ float fsum(FloatArray *floats) {
 
 float my_fsum(FloatArray *floats) {
     // implementation of the pairwise summation
-    assert(floats != NULL);
+    //assert(floats != NULL);
+    float s = 0;
     // if the array is small
-    if (floats->count < 3) {
+    if (floats->count < 2) {
       // just sum up all of the values
-      float s = floats->values[0];
+      s = floats->values[0];
       for (int i = 1; i < floats->count; i++) {
         s = s + floats->values[i];
+      }
     }
     else {
       // find where to split the array
-      float m = floor(floats->count / 2)
+      FloatArray firstHalf;
+      FloatArray secondHalf;
+      int m = (floats->count / 2);
+      int n = floats->count - m;
       // split into two arrays
-      FloatArray *firstHalf;
-      FloatArray *secondtHalf;
-      firstHalf->values = floats->values[0];
-      firstHalf->count = m;
-      secondHalf->values = floats->values[m];
-      secondHalf->count = floats->count - m;
+      float *values1 = malloc(m * sizeof(float));
+      if (values1 == NULL) {
+          printf("ERROR:  couldn't allocate %u bytes!\n",
+                 (unsigned int) (m * sizeof(float)));
+          exit(1);
+      }
+      float *values2 = malloc(n * sizeof(float));
+      if (values2 == NULL) {
+          printf("ERROR:  couldn't allocate %u bytes!\n",
+                 (unsigned int) (n * sizeof(float)));
+          exit(1);
+      }
+      /* Zero out the newly allocated memory. */
+      memset(values1, 0, m * sizeof(float));
+      memset(values2, 0, n * sizeof(float));
+
+      /* Load each floating-point value into its corresponding location
+       * in the array.
+       */
+      for (int i = 0; i < m; i++) {
+          values1[i] = floats->values[i];
+      }
+      for (int i = 0; i < n; i++) {
+          values2[i] = floats->values[i + m];
+      }
+      /* Finally, store the loaded values into the passed-in struct. */
+      firstHalf.count = m;
+      firstHalf.values = values1;
+      secondHalf.count = n;
+      secondHalf.values = values2;
       // recursive function call on the two halves
-      s = my_fsum(firstHalf) + my_fsum(secondHalf);
+      s = my_fsum(&firstHalf) + my_fsum(&secondHalf);
       // free the pointers
-      free(firstHalf);
-      free(secondHalf);
+      free(firstHalf.values);
+      free(secondHalf.values);
     }
     return s;
 }
