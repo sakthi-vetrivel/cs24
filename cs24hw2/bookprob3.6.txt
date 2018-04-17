@@ -1,4 +1,9 @@
 Answers to Practice Problem 3.6, CS:APP3e pp.192-193
 ----------------------------------------------------
 
-
+leaq 6(%rax), %rdx          6+x
+leaq (%rax, %rcx), %rdx     x + y
+leaq (%rax, %rcx, 4), %rdx  x + 4y
+leaq 7(%rax, %rax, 8), %rdx 7 + x + 8x = 7 + 9x
+leaq 0xA(,%rcx,4), %rdx     10 + 4y
+leaq 9(%rax, %rcx,2), %rdx  9 + x + 2y

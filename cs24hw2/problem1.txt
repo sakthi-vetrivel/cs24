@@ -1,5 +1,3 @@
 What does the assembly code do?
 -------------------------------
-
-
-
+The first instruction moves x into rax. It then multiplies x by 3 to obtain 3x and then adds 12 to obtain 3x + 12. We then multiple this result by the original x to obtain x*(3x + 12) to yield 3x^2 + 12x. We then subtract this quantity by 17. Therefore, these instructions compute 3x^2 + 12x - 17 where the result is in rax.

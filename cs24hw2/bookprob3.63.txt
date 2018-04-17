@@ -1,4 +1,46 @@
 Answer to Problem 3.63, CS:APP3e pp.314-315
 -------------------------------------------
 
+What each line does
 
+1 switch_prob
+2 n = n - 60
+3 compare n to 5
+4 if n > 5, then go to
+5 if n <= 5
+6 result = 8*n
+7
+8 break
+9 move x into %rax
+10 x >> 3 (shift right arithemetic)
+11 break
+12 move x into %rax
+13 x << 4, x * 16
+14 x*16 - x
+15 move 16*x into value for x
+16 multiply x by x
+17  x + 75
+18  return result
+
+long switch_prob(long x, long n) {
+  long result = x;
+  switch(n) {
+    case 60:
+    case 62:
+      result = result * 8;
+      break;
+    case 63:
+      result = result / 8;
+      break;
+    case 64:
+      result = result * 16 - result;
+      break;
+    case 65:
+      result = result * result;
+    case 61:
+    default:
+      result = result + 75;
+    }
+    return result;
+  }
+}
