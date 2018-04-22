@@ -1,5 +1,18 @@
 Bugs in rl_decode() function:
 -----------------------------
+Before we call malloc(), we need to save more than just %rdi. malloc()
+also changes the values of %rsi and %rdx, so we'll save these
+onto the stack as well before calling malloc() and then restore them
+after calling malloc().
 
+In our find_space_loop, we need to look at every other character, not every
+character, because we don't want to count the character values as numbers.
+So, in find_space_loop, we need to add 2 to rcx, not 1.
 
+In write_loop, we also need to increment %r10, since right now, we're
+just writing to incorrect bit since it's not being changed.
 
+Finally, we were computing the size and storing it in %bl, which might
+not be large enough to hold the size for some cases. So, instead we
+want to store the result in %rbx. So we extract the result into an 8-bit
+register and then add that result to %rbx.
