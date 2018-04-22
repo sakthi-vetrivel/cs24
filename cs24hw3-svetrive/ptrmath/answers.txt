@@ -1,3 +1,23 @@
 Answers for the "Arrays, Pointer Arithmetic, and Structs" section of CS24 HW3:
 
+1. Memory Region:
 
+(zeroed out 16 bytes)
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+00 00 00 FE EB DA ED 00 00 00 00 00 EB AB FE AC
+
+2.
+
+member      size      offset
+-----------------------------
+id          4         0
+code        5         4
+next        8         16
+
+Size of the total struct: 24
+Unused bytes: 7
+
+3.
+
+offset = 24*4 + 4 + 4 = 104
