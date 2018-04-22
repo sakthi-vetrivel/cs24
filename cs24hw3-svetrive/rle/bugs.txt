@@ -1,0 +1,5 @@
+Bugs in rl_decode() function:
+-----------------------------
+
+
+

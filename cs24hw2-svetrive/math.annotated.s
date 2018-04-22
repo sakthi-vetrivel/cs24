@@ -1,7 +1,12 @@
 /* This file contains x86-64 assembly-language implementations of three
  * basic, very common math operations.
  */
- /*The naive implementations would all contain if statements to compute the results. Since these implementations avoid that, we avoid conditional jumps in the assembly code, which would have been very costly. Instead, all of these functions simply just use x86-64 operations for this computation, making all of these operations much faster. 
+ /*The naive implementations would all contain if statements to
+ compute the results. Since these implementations avoid that,
+ we avoid conditional jumps in the assembly code, which would have
+ been very costly. Instead, all of these functions simply just use
+ x86-64 operations for this computation, making all of these operations
+  much faster.
 
         .text
 
