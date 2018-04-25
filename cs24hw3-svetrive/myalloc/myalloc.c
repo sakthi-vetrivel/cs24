@@ -58,54 +58,60 @@ void init_myalloc() {
 /*!
  * Attempt to allocate a chunk of memory of "size" bytes.  Return 0 if
  * allocation fails.
+ * Here, we use best-fit allocation. This method works well if we have a few
+ * blocks of various sizes, and doesn't work well if we have many blocks of
+ * uniform size.
+ * Since we must traverse through each of the memory blocks to find the best
+ * block for our allocation, we must access each one and check its size. As
+ * a result, our allocation is O(n) in the number of blocks.
  */
 unsigned char *myalloc(int size) {
-
-      // points to the header of the first block
+     // points to the header of the first block
      unsigned char * current_block = mem;
+     // get size of the first block
      int current_space = *((int *) current_block);
-     //unsigned char * best = current_block;
+     // set initial best parameters
+     unsigned char * best = NULL;
+     int best_size = MEMORY_SIZE;
 
-     // if this block isn't big enough
-     while (size > current_space) {
-       // check to see if we've reached the end of the memory pool
-       // header of last block + size of header + size of memory block + size of footer
-       // gets us to the header of the next block, want to check if that's MEMORY SIZE
-       // moving on, when we increment by current_space, want to make sure that's a positive value
-       //printf("%d", current_space);
-       current_space = abs(current_space);
-       // if we reach the end
-       if (current_block + current_space + 2 * sizeof(int) >= mem + MEMORY_SIZE ) {
-         current_block = NULL;
-         break;
+     // check if we've reached the end
+     unsigned char * end = current_block + abs(current_space) + 2*sizeof(int);
+     while (end <= mem + MEMORY_SIZE) {
+       // check if this block fits and if it beats the current best block
+       if (current_space >= size && current_space < best_size) {
+          best = current_block;
+          best_size = current_space;
        }
-       // want to look at the next block
+       // move on to the next block
        else {
          // get current_block to point at the header of the next block
          current_block += abs(current_space) + 2*sizeof(int);
-         // current space dereferences the header to get the amount of space available
+         // current space dereferences the header to get the amount of
+         // space available
          current_space =  *((int *) current_block);
        }
+       end = current_block + abs(current_space) + 2*sizeof(int);
      }
-     // we have a block that is a decent size
-     if (current_block) {
+     // we found a block that is big enough
+     if (best) {
        // get a pointer to actual memory block
-       unsigned char * resultptr = current_block + sizeof(int);
+       unsigned char * resultptr = best + sizeof(int);
        // check to see if we can create another block with the remaining space
-       if (current_space - size > 2*sizeof(int)) {
+       if (best_size - size > 2*sizeof(int)) {
          // set the header of the block to show that it's no longer available
-         *((int *) current_block) = -1 * size;
+         *((int *) best) = -1 * size;
          // set the footer of the block
-         *((int *) (current_block + sizeof(int) + size)) = -1 * size;
+         *((int *) (best + sizeof(int) + size)) = -1 * size;
          // set the header of the next block;
-         *((int *) (current_block + 2*sizeof(int) + size)) = current_space - size - 2*sizeof(int);
+         int split_size =  best_size - size - 2*sizeof(int);
+         *((int *) (best + 2*sizeof(int) + size)) = split_size;
          // set the footer of the next block
-         *((int *) (current_block + sizeof(int) + current_space)) = current_space - size - 2*sizeof(int);
+         *((int *) (best + sizeof(int) + best_size)) = split_size;
        }
        else {
          // just set the header and footer of the current block
-         *((int *) current_block) = -1 * current_space;
-         *((int *) (current_block + sizeof(int) + current_space)) = -1 * current_space;
+         *((int *) best) = -1 * best_size;
+         *((int *) (best + sizeof(int) + best_size)) = -1 * best_size;
        }
        return resultptr;
      }
@@ -119,9 +125,13 @@ unsigned char *myalloc(int size) {
 /*!
  * Free a previously allocated pointer.  oldptr should be an address returned by
  * myalloc().
+ * Since we're using header and footer tags to store the size of the memory
+ * block, we are able to check the memory block to the left and right of the
+ * block we are freeing and coalesce. Thus, our deallocation and coalescing of
+ * adjacent blocks runs in constant time with respect to the number of memory
+ * blocks.
  */
 void myfree(unsigned char *oldptr) {
-  // set that block to be freed
   unsigned char * header = oldptr;
   unsigned char * footer = oldptr;
   unsigned char * right = NULL;
@@ -150,24 +160,27 @@ void myfree(unsigned char *oldptr) {
     footer = oldptr + abs(size) + 2*sizeof(int) + right_size;
     size = left_size + 2*sizeof(int) + abs(size) + 2*sizeof(int) + right_size;
   }
+  // if just the left block is free
   else if (left && (left_size > 0)) {
     header = oldptr - 2*sizeof(int) - left_size - sizeof(int);
     footer = oldptr + abs(size);
     size = left_size + 2*sizeof(int) + abs(size);
   }
+  // if just the right block is free
   else if (right && (right_size > 0)) {
     header = oldptr - sizeof(int);
     footer = oldptr + abs(size) + 2*sizeof(int) + right_size;
     size = right_size + 2*sizeof(int) + abs(size);
   }
+  // none of the adjacents blocks are free
   else {
     header = oldptr - sizeof(int);
     footer = oldptr + abs(size);
     size = abs(size);
   }
+  // update header and footer
   *((int*) header) = size;
   *((int*) footer) = size;
-
 }
 
 /*!

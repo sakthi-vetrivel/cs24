@@ -1,0 +1,36 @@
+(a)
+
+If myfree() is called on an address that did not originate from myalloc(),
+then the memory block will not be organized as expected with the headers and
+footers. This will result in us trying to dereference a pointer to get the
+size of the memory block when the pointer doesn't contain anything, leading
+to a segmentation fault.
+
+If myfree() is called on an address that is contained within a block
+returned by myalloc(), we then run into the same issue, since we currently
+expect the header of memory of the block to be immediately before the address
+passed into myfree(). As a result, we will try to dereference a pointer to get
+the size of the memory block when the pointer doesn't contain anything, leading
+to a segmentation fault.
+
+If myfree() is called on an address that have already been freed, the address
+remains freed and nothing changes. The size of the block will be set in the
+header and footer tags as the absolute value of the original size. Seeing
+as this will be positive already since it's a freed address, there is no change.
+
+(b)
+
+For the first case, an address that did not originate from myalloc(), we could
+simply check if the address passed in is within the memory pool by comparing the
+address and seeing if its within the range of the start of the memory pool
+(mem) and the end of the memory pool (mem + MEMORY_SIZE). If it is within the
+range, we proceed. Otherwise, we throw an error.
+
+For the second case, an address that is contained within a block returned by
+myalloc():
+If we maintained a list of the addresses of all of the header tags we have
+added in the memory pool, then every time before we try to access the size of
+a block through what we believe is a header tag, we could check the address
+of the supposed header tag against the list of addresses of the header tags
+to determine if it really is a header tag like we expect. If it is, we continue
+as usual. Otherwise, we can throw an error.

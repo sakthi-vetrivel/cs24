@@ -55,7 +55,6 @@ int main(int argc, char *argv[]) {
     // case with both right and left
     myfree(b);
 
-
     close_myalloc();
 
     return 0;
