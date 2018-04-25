@@ -37,8 +37,9 @@ rl_decode:
         jge     find_space_done
 
 find_space_loop:
-        mov     (%rdi, %rcx), %r9b         # Add in the count, then move
-        add     %r9, %rbx
+        xor     %r8, %r8                  # clear register
+        mov     (%rdi, %rcx), %r8b        # Add in the count, then move
+        add     %r8, %rbx
         add     $2, %rcx                  # forward to the next count!
 
         cmp     %esi, %ecx
