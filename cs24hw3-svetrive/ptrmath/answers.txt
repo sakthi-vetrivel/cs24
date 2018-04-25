@@ -20,4 +20,4 @@ Unused bytes: 7
 
 3.
 
-offset = 24*4 + 4 + 4 = 104
+offset = 24*4 + 4 + 3 = 103
