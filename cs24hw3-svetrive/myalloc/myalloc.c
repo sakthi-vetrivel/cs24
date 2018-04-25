@@ -22,15 +22,6 @@
  */
 int MEMORY_SIZE;
 unsigned char *mem;
-
-
-/* TODO:  The unacceptable allocator uses an external "free-pointer" to track
- *        where free memory starts.  If your allocator doesn't use this
- *        variable, get rid of it.
- *
- *        You can declare data types, constants, and statically declared
- *        variables for managing your memory pool in this section too.
- */
 static unsigned char *freeptr;
 
 
@@ -57,9 +48,10 @@ void init_myalloc() {
 		MEMORY_SIZE);
         abort();
     }
-
-    /* TODO:  You can initialize the initial state of your memory pool here. */
     freeptr = mem;
+    *((int*) mem) = MEMORY_SIZE - 2*sizeof(int);
+    freeptr += MEMORY_SIZE - sizeof(int);
+    *((int*) freeptr) = MEMORY_SIZE - 2*sizeof(int);
 }
 
 
@@ -69,38 +61,113 @@ void init_myalloc() {
  */
 unsigned char *myalloc(int size) {
 
-    /* TODO:  The unacceptable allocator simply checks to see if there are at
-     *        least "size" bytes left in the pool, and if so, the caller gets
-     *        the current "free-pointer" value, and then freeptr is incremented
-     *        by size bytes.
-     *
-     *        Your allocator will be more sophisticated!
-     */
-    if (freeptr + size < mem + MEMORY_SIZE) {
-        unsigned char *resultptr = freeptr;
-        freeptr += size;
-        return resultptr;
-    }
-    else {
-        fprintf(stderr, "myalloc: cannot service request of size %d with"
-                " %lx bytes allocated\n", size, (freeptr - mem));
-        return (unsigned char *) 0;
-    }
-}
+      // points to the header of the first block
+     unsigned char * current_block = mem;
+     int current_space = *((int *) current_block);
+     //unsigned char * best = current_block;
 
+     // if this block isn't big enough
+     while (size > current_space) {
+       // check to see if we've reached the end of the memory pool
+       // header of last block + size of header + size of memory block + size of footer
+       // gets us to the header of the next block, want to check if that's MEMORY SIZE
+       // moving on, when we increment by current_space, want to make sure that's a positive value
+       //printf("%d", current_space);
+       current_space = abs(current_space);
+       // if we reach the end
+       if (current_block + current_space + 2 * sizeof(int) >= mem + MEMORY_SIZE ) {
+         current_block = NULL;
+         break;
+       }
+       // want to look at the next block
+       else {
+         // get current_block to point at the header of the next block
+         current_block += abs(current_space) + 2*sizeof(int);
+         // current space dereferences the header to get the amount of space available
+         current_space =  *((int *) current_block);
+       }
+     }
+     // we have a block that is a decent size
+     if (current_block) {
+       // get a pointer to actual memory block
+       unsigned char * resultptr = current_block + sizeof(int);
+       // check to see if we can create another block with the remaining space
+       if (current_space - size > 2*sizeof(int)) {
+         // set the header of the block to show that it's no longer available
+         *((int *) current_block) = -1 * size;
+         // set the footer of the block
+         *((int *) (current_block + sizeof(int) + size)) = -1 * size;
+         // set the header of the next block;
+         *((int *) (current_block + 2*sizeof(int) + size)) = current_space - size - 2*sizeof(int);
+         // set the footer of the next block
+         *((int *) (current_block + sizeof(int) + current_space)) = current_space - size - 2*sizeof(int);
+       }
+       else {
+         // just set the header and footer of the current block
+         *((int *) current_block) = -1 * current_space;
+         *((int *) (current_block + sizeof(int) + current_space)) = -1 * current_space;
+       }
+       return resultptr;
+     }
+     else {
+         fprintf(stderr, "myalloc: cannot service request of size %d with"
+                 " %d bytes allocated\n", size, current_space);
+         return (unsigned char *) 0;
+     }
+   }
 
 /*!
  * Free a previously allocated pointer.  oldptr should be an address returned by
  * myalloc().
  */
 void myfree(unsigned char *oldptr) {
-    /* TODO:
-     *
-     * The unacceptable allocator does nothing -- that's part of why this is
-     * unacceptable!
-     *
-     * Allocations will succeed for a little while...
-     */
+  // set that block to be freed
+  unsigned char * header = oldptr;
+  unsigned char * footer = oldptr;
+  unsigned char * right = NULL;
+  unsigned char * left = NULL;
+  int size = *((int *) (oldptr - sizeof(int)));
+  int left_size = 0;
+  int right_size = 0;
+
+  // check right block
+  if (oldptr + abs(size) +  sizeof(int) < mem + MEMORY_SIZE) {
+    // get the header of the right block
+    right = oldptr + abs(size) + sizeof(int);
+    // get size from the header
+    right_size =  *((int *) right);
+  }
+  // check left block
+  if (oldptr - sizeof(int) > mem) {
+    // get footer of left block
+      left = oldptr - 2*sizeof(int);
+      // gets size from the footer
+      left_size =  *((int *) left);
+  }
+  // if both left and right block are free
+  if ((left && right) && (left_size > 0 && right_size > 0)) {
+    header = oldptr - 2*sizeof(int) - left_size - sizeof(int);
+    footer = oldptr + abs(size) + 2*sizeof(int) + right_size;
+    size = left_size + 2*sizeof(int) + abs(size) + 2*sizeof(int) + right_size;
+  }
+  else if (left && (left_size > 0)) {
+    header = oldptr - 2*sizeof(int) - left_size - sizeof(int);
+    footer = oldptr + abs(size);
+    size = left_size + 2*sizeof(int) + abs(size);
+  }
+  else if (right && (right_size > 0)) {
+    header = oldptr - sizeof(int);
+    footer = oldptr + abs(size) + 2*sizeof(int) + right_size;
+    size = right_size + 2*sizeof(int) + abs(size);
+  }
+  else {
+    header = oldptr - sizeof(int);
+    footer = oldptr + abs(size);
+    size = abs(size);
+  }
+  *((int*) header) = size;
+  *((int*) footer) = size;
+
 }
 
 /*!

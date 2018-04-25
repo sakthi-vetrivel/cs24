@@ -32,21 +32,31 @@ unsigned char * allocate(int size, unsigned char fill) {
 int main(int argc, char *argv[]) {
 
     /* Specify the memory pool size, then initialize the allocator. */
-    MEMORY_SIZE = 40000;
+    MEMORY_SIZE = 100 + 150 + 200 + 300 + 8 * sizeof(int);
     init_myalloc();
+    unsigned char *a;
+    unsigned char *b;
+    unsigned char *c;
+    unsigned char *d;
 
     /* Perform simple allocations and deallocations. */
     /* Change the below code as you see fit, to test various scenarios. */
+    a = allocate(100, 'A');
+    d = allocate(150, 'D');
+    b = allocate(200, 'B');
+    c = allocate(300, 'C');
 
-    unsigned char *a = allocate(100, 'A');
-    // unsigned char *b = allocate(200, 'B');
-
+    // case with no coalescing
     myfree(a);
-    // myfree(b);
+    // case with left
+    myfree(d);
+    // case with right coalescing
+    myfree(c);
+    // case with both right and left
+    myfree(b);
+
 
     close_myalloc();
 
     return 0;
 }
-
-
