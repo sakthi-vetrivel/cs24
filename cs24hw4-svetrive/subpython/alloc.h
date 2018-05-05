@@ -35,5 +35,9 @@ int collect_garbage(void);
 /* Clean up the allocator and memory pool state. */
 void close_alloc(void);
 
+void mark(const char *name, Reference ref);
+
+void sweep(void);
+
 
 #endif /* IMPALLOC_H */

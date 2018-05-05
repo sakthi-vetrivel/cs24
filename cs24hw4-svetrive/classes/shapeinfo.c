@@ -10,9 +10,8 @@
 void print_info(const char *type, Shape_Data *s) {
     float mass, volume;
 
-    /* TODO:  Retrieve mass and volume from the passed-in shape! */
-    mass = -1;
-    volume = -1;
+    mass = Shape_getMass(s);
+    volume = s->class->getVolume(s);
 
     printf("Volume of %s:  %f\tMass of %s:  %f\n\n", type, volume, type, mass);
 }
@@ -43,4 +42,3 @@ int main() {
 
     return 0;
 }
-

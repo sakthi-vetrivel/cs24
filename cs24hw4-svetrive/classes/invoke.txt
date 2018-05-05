@@ -1,0 +1,5 @@
+movq    (%r8), %rcx    # get pointer to class information
+movq    (%rcx), %rcx   # get pointer to the volume function for the class
+movq    %r8, %rdi      # move argument to appropriate register
+call    *%rcx          # call the director using the stored pointer after
+                       # dereferencing it

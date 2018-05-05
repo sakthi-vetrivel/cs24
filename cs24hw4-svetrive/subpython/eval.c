@@ -658,4 +658,3 @@ Reference key_clone(Reference ref) {
             return 0;
     }
 }
-

@@ -118,7 +118,7 @@ typedef struct FloatValue {
 
 /*!
  * A "string value" type that represents strings.  It is a subtype of
- * Value.  This means that we can cast a StringValue* to a Value* and 
+ * Value.  This means that we can cast a StringValue* to a Value* and
  * still access all the Value components.  And, if a Value has a type of
  * VAL_STRING, we can cast the Value* back to a StringValue* to get at
  * the string it stores.

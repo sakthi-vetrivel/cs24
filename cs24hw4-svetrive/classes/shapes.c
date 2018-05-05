@@ -24,7 +24,7 @@ static Cone_Class   Cone;
 /*!
  * This function performs static initialization of all classes.  It must be
  * called before any of the classes can be used.
- */  
+ */
 void static_init() {
     Shape_class_init(&Shape);
     Box_class_init(&Box);
@@ -40,7 +40,7 @@ void static_init() {
 
 /*! Static initialization for the Shape class. */
 void Shape_class_init(Shape_Class *class) {
-    /* TODO */
+    class->getVolume = NULL;
 }
 
 
@@ -49,20 +49,22 @@ void Shape_class_init(Shape_Class *class) {
  * function initializes the density of the shape, as well as the class info.
  */
 void Shape_init(Shape_Data *this, Shape_Class *class, float D) {
-    /* TODO */
+    this->class = class;
+    Shape_setDensity(this,D);
 }
 
 
 /*! Sets the density of this shape.  The argument must be nonnegative! */
 void Shape_setDensity(Shape_Data *this, float D) {
-    /* TODO */
+    if (D > 0) {
+      this->density = D;
+    }
 }
 
 
 /*! Returns the mass of this shape, computed from the density and volume. */
 float Shape_getMass(Shape_Data *this) {
-    /* TODO */
-    return -1;
+    return this->density * this->class->getVolume(this);
 }
 
 
@@ -71,7 +73,7 @@ float Shape_getMass(Shape_Data *this) {
  * implementation!  In the class initialization, set the function-pointer to
  * NULL to signify this.
  */
- 
+
 /*
  * There is also no new_Shape() function, since Shape is abstract (missing
  * some of its implementation), and therefore is not instantiable.
@@ -85,7 +87,7 @@ float Shape_getMass(Shape_Data *this) {
 
 /*! Static initialization for the Box class. */
 void Box_class_init(Box_Class *class) {
-    /* TODO */
+    class->getVolume = Box_getVolume;
 }
 
 
@@ -96,17 +98,19 @@ void Box_class_init(Box_Class *class) {
  */
 void Box_init(Box_Data *this, Box_Class *class,
     float L, float W, float H, float D) {
-
-    /* TODO */
+      Shape_init((Shape_Data *) this, (Shape_Class *) class, D);
+      Box_setSize(this, L, W, H);
 }
 
 
 /*!
  * This function implements the operation corresponding to the C++ code
- * "new Box(L, W, H, D)", performing both heap-allocation and initialization. 
+ * "new Box(L, W, H, D)", performing both heap-allocation and initialization.
  */
 Box_Data * new_Box(float L, float W, float H, float D) {
-    /* TODO */
+    Box_Data *box = (Box_Data *) malloc(sizeof(Box_Data));
+    Box_init(box, &Box, L, W, H, D);
+    return box;
 }
 
 
@@ -114,7 +118,13 @@ Box_Data * new_Box(float L, float W, float H, float D) {
  * Sets the dimensions of the box.  The arguments are asserted to be positive.
  */
 void Box_setSize(Box_Data *this, float L, float W, float H) {
-    /* TODO */
+    assert(H > 0);
+    assert(W > 0);
+    assert(L > 0);
+
+    this->length = L;
+    this->width = W;
+    this->height = H;
 }
 
 
@@ -123,8 +133,7 @@ void Box_setSize(Box_Data *this, float L, float W, float H) {
  * of Shape::getVolume(), which is abstract (i.e. pure-virtual).
  */
 float Box_getVolume(Box_Data *this) {
-    /* TODO */
-    return -1;
+    return this->width * this->height * this->length;
 }
 
 
@@ -135,7 +144,7 @@ float Box_getVolume(Box_Data *this) {
 
 /*! Static initialization for the Sphere class. */
 void Sphere_class_init(Sphere_Class *class) {
-    /* TODO */
+    class->getVolume = Sphere_getVolume;
 }
 
 
@@ -145,22 +154,25 @@ void Sphere_class_init(Sphere_Class *class) {
  * density, and then it initializes its data members with the specified values.
  */
 void Sphere_init(Sphere_Data *this, Sphere_Class *class, float R, float D) {
-    /* TODO */
+    Shape_init((Shape_Data *) this, (Shape_Class *) class, D);
+    Sphere_setRadius(this, R);
 }
 
 
 /*!
  * This function implements the operation corresponding to the C++ code
- * "new Sphere(R, D)", performing both heap-allocation and initialization. 
+ * "new Sphere(R, D)", performing both heap-allocation and initialization.
  */
 Sphere_Data * new_Sphere(float R, float D) {
-    /* TODO */
+    Sphere_Data * sphere = (Sphere_Data *) malloc(sizeof(Sphere_Data));
+    Sphere_init(sphere, &Sphere, R, D);
 }
 
 
 /*! Sets the radius of the sphere.  The argument is asserted to be positive. */
 void Sphere_setRadius(Sphere_Data *this, float R) {
-    /* TODO */
+    assert(R > 0);
+    this->radius = R;
 }
 
 
@@ -169,8 +181,7 @@ void Sphere_setRadius(Sphere_Data *this, float R) {
  * of Shape::getVolume(), which is abstract (i.e. pure-virtual).
  */
 float Sphere_getVolume(Sphere_Data *this) {
-    /* TODO */
-    return -1;
+    return 4 * this->radius * this->radius * this->radius * 3.14159 / 3;
 }
 
 
@@ -181,7 +192,7 @@ float Sphere_getVolume(Sphere_Data *this) {
 
 /*! Static initialization for the Cone class. */
 void Cone_class_init(Cone_Class *class) {
-    /* TODO */
+    class->getVolume = Cone_getVolume;
 }
 
 
@@ -191,16 +202,18 @@ void Cone_class_init(Cone_Class *class) {
  * density, and then it initializes its data members with the specified values.
  */
 void Cone_init(Cone_Data *this, Cone_Class *class, float BR, float H, float D) {
-    /* TODO */
+    Shape_init((Shape_Data *) this, (Shape_Class *) class, D);
+    Cone_setBaseHeight(this, BR, H);
 }
 
 
 /*!
  * This function implements the operation corresponding to the C++ code
- * "new Cone(BR, H, D)", performing both heap-allocation and initialization. 
+ * "new Cone(BR, H, D)", performing both heap-allocation and initialization.
  */
 Cone_Data * new_Cone(float BR, float H, float D) {
-    /* TODO */
+    Cone_Data * cone = (Cone_Data *) malloc(sizeof(Cone_Data));
+    Cone_init(cone, &Cone, BR, H, D);
 }
 
 
@@ -208,7 +221,11 @@ Cone_Data * new_Cone(float BR, float H, float D) {
  * Sets the dimensions of the cone.  The arguments are asserted to be positive.
  */
 void Cone_setBaseHeight(Cone_Data *this, float BR, float H) {
-    /* TODO */
+    assert(BR > 0);
+    assert(H > 0);
+
+    this->base_radius = BR;
+    this->height = H;
 }
 
 
@@ -217,7 +234,5 @@ void Cone_setBaseHeight(Cone_Data *this, float BR, float H) {
  * of Shape::getVolume(), which is abstract (i.e. pure-virtual).
  */
 float Cone_getVolume(Cone_Data *this) {
-    /* TODO */
-    return -1;
+    return 3.14159 * this->base_radius * this->base_radius * this->height / 3;
 }
-

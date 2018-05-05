@@ -20,7 +20,6 @@
 
 //// MODULE-LOCAL STATE ////
 
-
 /*!
  * Specifies the size of the memory pool.  This is a static local variable;
  * the value is specified in the call to init_alloc().
@@ -61,6 +60,8 @@ static int num_refs;
 /*! This is the actual size of the ref_table. */
 static int max_refs;
 
+/*List of references we want to keep*/
+static int * marker;
 
 //// LOCAL HELPER FUNCTIONS ////
 
@@ -309,24 +310,105 @@ void memdump() {
 
 //// GARBAGE COLLECTOR ////
 
+// This function is used to mark everything that is not garbage.
+void mark(const char *name, Reference ref) {
+  // We derefence the value to determine the size of the object.
+   Value * val = deref(ref);
+   // Mark this value since we want to keep it around.
+   marker[ref] = 1;
+
+   // Check what type this value is to properly mark all componenets of it
+   switch (val->type) {
+       case VAL_LIST_NODE: {
+           // Traverse through list of nodes, marking each one.
+           ListValue *lv = (ListValue *) val;
+           if (lv->list_node.value != NULL_REF) {
+             marker[lv->list_node.value] = 1;
+           }
+           if (lv->list_node.next != NULL_REF) {
+             mark(name, lv->list_node.next);
+           }
+           break;
+       }
+
+       case VAL_DICT_NODE: {
+         // Traverse through list of dictionary nodes, marking each one.
+           DictValue *dv = (DictValue *) val;
+           if (dv->dict_node.key != NULL_REF) {
+             marker[dv->dict_node.value] = 1;
+           }
+           if (dv->dict_node.value != NULL_REF) {
+             marker[dv->dict_node.value] = 1;
+           }
+           if (dv->dict_node.next != NULL_REF) {
+             mark(name, dv->dict_node.next);
+           }
+           break;
+       }
+       // if it's of type float or string, we only need to mark one thing,
+       // so we're already done!
+       default:
+           break;
+   }
+
+}
+
 
 int collect_garbage(void) {
     unsigned char *old_freeptr = freeptr;
+    unsigned char * c = mem;
     int reclaimed;
 
     printf("Collecting garbage.\n");
 
-    // TODO:  Implement garbage collection.
-    printf("\nWait, I don't know how to identify or collect garbage.  :(\n\n");
-    // END TODO
+    // We allocated memory for our array of marks to help us identify
+    // garbage.
+    marker = realloc(marker, num_refs * sizeof(int));
+    // Initialize all entries in the marker array to be zero, since no values
+    // are stored yet.
+    for (int i = 0; i < num_refs; i++) {
+      marker[i] = 0;
+    }
 
-    // Ths will report how many bytes we were able to free in this garbage
+    // Mark all variables we want to keep
+    foreach_global(mark);
+    // Sweep all unmarked variables.
+    sweep();
+
+    //Coalescing memory. For each reference in ref_table, if it's not null,
+    // we want to move the values closer to each other, so we're able
+    // to leave one large block of memory instead of fragmenting it.
+    for (int i = 0; i < num_refs; i++) {
+      if (ref_table[i] != NULL) {
+        // need to get size of the value in the ref table
+        Value * val = (Value *) (ref_table[i]);
+        int size = sizeof(val->data_size + sizeof(Value));
+        // change value in the ref table
+        ref_table[i] = (Value *) c;
+        // move the reference in memory
+        memmove(c, ref_table[i], size);
+        // update pointer to newest available space
+        c = c + size;
+      }
+    }
+    freeptr = c;
+
+    // This will report how many bytes we were able to free in this garbage
     // collection pass.
     reclaimed = (int) (old_freeptr - freeptr);
     printf("Reclaimed %d bytes of garbage.\n", reclaimed);
     return reclaimed;
 }
 
+// This function checks each reference in the table to see if any are unmarked.
+// If they are unmarked, we set the value of that reference to NULL.
+void sweep() {
+  for (int i = 0; i < num_refs; i++) {
+    if (marker[i] == 0) {
+      ref_table[i] = NULL;
+    }
+  }
+}
 
 //// END GARBAGE COLLECTOR ////
 
@@ -341,4 +423,3 @@ void close_alloc(void) {
     free(mem);
     mem = NULL;
 }
-
