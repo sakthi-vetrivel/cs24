@@ -1,0 +1,10 @@
+Instruction Decoding:  Questions
+================================
+
+1)  Offsets of MUL_LOOP, SKIP_ADD, MUL_DONE
+
+
+2)  Assembly instructions and encoded bit-patterns
+
+
+
