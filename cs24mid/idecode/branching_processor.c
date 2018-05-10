@@ -21,7 +21,7 @@
  * time," beyond which we assume that the program has a bug like an infinite
  * loop in it.
  */
-#define MAX_EXECUTE_TIME 1000
+#define MAX_EXECUTE_TIME 100
 
 
 /*!
@@ -182,5 +182,3 @@ void run(Processor *proc) {
         printf("Program terminated normally.\n");
     }
 }
-
-

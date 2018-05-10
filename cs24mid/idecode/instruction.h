@@ -48,6 +48,3 @@
 #define OP_BRA   0x07  /*!< The opcode for unconditional branch. */
 #define OP_BRZ   0x0B  /*!< The opcode for branch-if-not-zero. */
 #define OP_BNZ   0x0F  /*!< The opcode for branch-if-not-zero. */
-
-
-
