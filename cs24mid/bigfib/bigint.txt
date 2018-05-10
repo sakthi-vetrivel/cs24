@@ -18,8 +18,6 @@ __add_bigint(int * a, int * b, int size)
   return 1;
 }
 
-
-
 a stored in rdi (since 8 bytes = long)
 b stored in rsi (since 8 bytes = long)
 size stored in dl (since 1 byte)

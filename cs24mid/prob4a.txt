@@ -1,53 +1,51 @@
 Explicit Allocator Scenario:  Allocation Fails under First-Fit but not Best-Fit
 ===============================================================================
 
-memory block of size 500
+memory block of size 400
 
-allocate 200
+a = allocate(200);
+b = allocate(100);
+c = allocate(100);
+free(a);
+free(c);
+d = allocate(100);
+e = allocate(200);
 
-allocate 100
-
-allocate 100
-
-free a and c
-
-allocate 100
-
-allocate 200
-
+--------------------------------------------------------------------
 FIRST FIT
+---------------------------------------------------------------------
+Following initial allocations:
 
-allocations
+|-- a (200) --|- b (100) -|- c (100) -|
 
-|-- a --|- b -|- c -|
+After freeing a and c:
 
-after freeing:
+|-- free (200) --|- b (100)-|- free (100) -|
 
-|-- free --|- b -|- free -|
+Allocating d:
 
-allocate 100
+|- d (100) -|- free (100) -|- b  (100)-|- free (100) -|
 
-|- d -|- free -|- b -|- free -|
-
-allocate 200
+Allocating e:
 
 No block is large enough to allocate 200 bytes: failure.
 
-
+---------------------------------------------------------------------
 BEST FIT
+---------------------------------------------------------------------
 
-allocations
+Following initial allocations:
 
-|-- a --|- b -|- c -|
+|-- a (200) --|- b (100) -|- c (100) -|
 
-after freeing:
+After freeing a and c:
 
-|-- free --|- b -|- free -|
+|-- free (200) --|- b (100)-|- free (100) -|
 
-allocate 100
+Allocating d:
 
-|- free -|- b -|- d -|
+|-- free (200) --|- b (100)-|- d (100) -|
 
-allocate 200
+Allocating e:
 
-|- f -|- b -|- d -|
+|-- e (200) --|- b (100)-|- d (100) -|

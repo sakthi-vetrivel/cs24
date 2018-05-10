@@ -2,64 +2,63 @@ Explicit Allocator Scenario:  Allocation Fails under Best-Fit but not First-Fit
 ===============================================================================
 memory block of size 500
 
-allocate 200
+a = allocate(200);
+b = allocate(200);
+c = allocate(100);
+free(a);
+free(c);
+d = allocate(80);
+e = allocate(120);
+f = allocate(100);
 
-allocate 200
-
-allocate 100
-
-free a and c
-
-allocate 80
-
-allocate 120
-
-allocate 100
-
+-------------------------------------------------------------------------
 FIRST FIT
+-------------------------------------------------------------------------
 
-allocations
-
-|-- a --|-- b --|- c -|
-
-after freeing:
-
-|-- free --|-- b --|- free -|
-
-allocate 80
-
-|-d-|- free -|-- a --|- free -|
-
-allocate 120
-
-|-d-|- e -|-- a --|- free -|
-
-allocate 100
-
-|-d-|- e -|-- a --|-f-|
-
-Was able to perform all allocation requests
-
-BEST FIT
-
-allocations
+After initial allocations:
 
 |-- a (200) --|-- b (200) --|- c (100) -|
 
-after freeing:
+After freeing a and c:
 
-|-- free (200) --|-- b (200) --|- free (100) -|
+|-- free (200) --|-- b (200 )--|- free (100) -|
 
-allocate 80
+Allocating d (80):
 
-|-- free (200) --|-- b (200) --|-d (80)-|-free (20)-|
+|-d (80)-|- free (120) -|-- b (200)--|- free (100) -|
 
-allocate 120
+Allocating e (120):
 
-|- e (120) -|- free (80) -|-- b (200) --|-c (80)-|-free (20)-|
+|-d (80)-|- e (120) -|-- b (200)--|- free (100) -|
 
-allocate 100
+Allocating f (100):
 
-|- e (120) -|- free (80) -|-- b (200) --|-c (80)-|-free (20)-|
+|-d (80)-|- e (120) -|-- b (200)--|- f (100) -|
+
+Was able to perform all allocation requests
+
+----------------------------------------------------------------------
+BEST FIT
+----------------------------------------------------------------------
+
+After initial allocations:
+
+|-- a (200) --|-- b (200) --|- c (100) -|
+
+After freeing a and c:
+
+|-- free (200) --|-- b (200 )--|- free (100) -|
+
+Allocating d (80):
+
+|-- free (200) --|-- b (200 )--|- d (80) -|- free (20) -|
+
+Allocating e (120):
+
+|-- e (120) --|-- b (200 )--|- d (80) -|- free (20) -|
+
+Allocating f (100):
+
+|-- e (120) --|-- b (200 )--|- d (80) -|- free (20) -|
 
 There are no free blocks large enough to fulfill this request. Fail.
