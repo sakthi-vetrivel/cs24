@@ -6,7 +6,7 @@
  * units in the processor.
  */
 
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +26,7 @@
 
 
 /*!
- * This function dynamically allocates and initializes the state for a new 
+ * This function dynamically allocates and initializes the state for a new
  * branching instruction decoder instance.  If allocation fails, the program is
  * terminated.
  */
@@ -57,14 +57,14 @@ void free_decode(Decode *d) {
  * NOTE:  the busdata_t type is defined in bus.h, and is a uint32_t
  */
 void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
-    /* This is the current instruction byte we are decoding. */ 
+    /* This is the current instruction byte we are decoding. */
     unsigned char instr_byte;
 
     /* The CPU operation the instruction represents.  This will be one of the
      * OP_XXXX values from instruction.h.
      */
     busdata_t operation;
-    
+
     /* Source-register values, including defaults for src1-related values. */
     busdata_t src1_addr = 0, src1_const = 0, src1_isreg = 1;
     busdata_t src2_addr = 0;
@@ -73,7 +73,7 @@ void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
      * instructions, dst == src2.
      */
     busdata_t dst_addr = 0;
-    
+
     /* Flag controlling whether the destination register is written to.
      * Default value is to *not* write to the destination register.
      */
@@ -90,6 +90,7 @@ void fetch_and_decode(InstructionStore *is, Decode *d, ProgramCounter *pc) {
     /* TODO:  Fill in the implementation of the multi-byte */
     /*        instruction decoder.                         */
     /*=====================================================*/
+    printf(instr_byte);
 
     /* All decoded!  Write out the decoded values. */
 

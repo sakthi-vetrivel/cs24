@@ -173,4 +173,3 @@ uint64_t divmod_bigint(bigint_t *n, uint64_t divisor) {
 
     return remainder;
 }
-

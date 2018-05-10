@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
     int n, raw_size;
     uint8_t size;
     bigint_t *fib_n;
-   
+
     if (argc != 3 && argc != 4) {
         usage(argv[0]);
         return 1;
@@ -154,4 +154,3 @@ int main(int argc, char **argv) {
     free_bigint(fib_n);
     return 0;
 }
-

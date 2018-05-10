@@ -47,24 +47,139 @@ Step 1:  A = alloc(6000);
 ==== PUT YOUR ANSWERS BELOW THIS LINE (which is 80 chars long) =================
 
 a)  Maximum size order of 2GiB heap
-
+The maximum size order of 2GiB heap is 26, since 32 * 2^26 = 2 * 1073741824,
+which is 2 GiB. The free list array in this scenario will contain free lists
+for 27 different size orders from 0 to 26.
 
 b)  Implementation of get_order_of_size()
 
+int get_order_of_size(int size) {
+   int size_order = 0;
+   size = size / 32;
+   while (size > 1) {
+      size_order++;
+      size = size / 2;
+   }
+   return size_order;
+}
 
 c)  Detecting failed allocation requests
 
+If an allocation request cannot be satisfied, then there is no free block of
+size_order greater than or equal to get_order_of_size(int size). In order
+to check this, we go through the free_list to check if any size orders greater
+than or equal to this value returned by the function are available. We start
+by checking the size order get_order_of_size(int size). If there are no
+available blocks of this size order, we then check the next largest size order,
+and so on, until we reach the maximum size order. If there are no available
+blocks of any of these size orders, then we return NULL. But, if at any point
+we find an available block of the size order being considered at the time, we
+return the available block. Checking in order of increasing size order allows
+us to minimize wasting of memory.
 
 d)  Sequence of allocations and deallocations for 16KiB heap
+
+Initial:
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |09 _                                                                           |
+  |16 KiB                                                                         |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 1:
+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 A    |06 _      |07 _               |O8 _                                   |
+  |1400    |2048      |4 KiB              |8KiB                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 2:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 A    |06 _      |07 _               |O8 B                                   |
+  |1400    |2048      |4 KiB              |5500                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 3:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 A    |05 C |05 _|07 _               |O8 B                                   |
+  |1400    |800  |1024|4 KiB              |5500                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 4:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 A    |05 C |05 _|07 D               |O8 B                                   |
+  |1400    |800  |1024|3200               |5500                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 5:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 _    |05 C |05 _|07 D               |O8 B                                   |
+  |2048    |800  |1024|3200               |5500                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 6:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 _    |05 C |05 E|07 D               |O8 B                                   |
+  |2048    |800  |700 |3200               |5500                                   |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 7:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 _    |05 C |05 E|07 D               |O8 _                                   |
+  |2048    |800  |700 |3200               |8 KiB                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 8:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 _    |05 _ |05 E|07 D               |O8 _                                   |
+  |2048    |1024 |700 |3200               |8 KiB                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 9:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 _    |05 _ |05 _|07 D               |O8 _                                   |
+  |2048    |1024 |1024 |3200               |8 KiB                                 |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O6 _    |06 _      |07 D               |O8 _                                   |
+  |2048    |2048      |3200               |8 KiB                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |O7 _               |07 D               |O8 _                                   |
+  |4 KiB              |3200               |8 KiB                                  |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+Step 10:
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+  |09 _                                                                           |
+  |16 KiB                                                                         |
+  +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+
+
+After Step 4, there are 1024 bytes still available to satisfy allocation
+requests. 3564 bytes are unused by the system and not available to satisfy
+allocation requests.
 
 
 e)  Limitation of buddy allocators
 
+Because the size of the block that can be allocated is limited to being
+a size order of the MIN_SIZE_BLOCK, there's a lot of internal memory
+fragmentation, leading to a large amount of the memory being unused by the
+system, yet unavailable.
 
 f)  Placement strategy of buddy allocators
 
+The buddy allocator is most similar to the best-fit allocation strategy,
+because it determines the smallest order block that can satisfy an allocation
+request, and then if a block of that size order is not available, splits blocks
+to create the smallest allocation block that satisfies the request. This focus
+on choosing the smallest block to satisfy the request is similar to the focus
+of the best-fit strategy.
 
 g)  Deferred coalescing
-
-
-
+Deferred coalescing would be beneficial in a case where a program repeatedly
+allocated a uniform amount of memory and freed it. In this case, the immediate
+coalescing would only coalesce free blocks in order to split them up again
+immediately. In this case, the deferred coalescing would improve the performance
+of the free() function, since we would only coalesce when needed.

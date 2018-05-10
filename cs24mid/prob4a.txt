@@ -1,4 +1,53 @@
 Explicit Allocator Scenario:  Allocation Fails under First-Fit but not Best-Fit
 ===============================================================================
 
+memory block of size 500
 
+allocate 200
+
+allocate 100
+
+allocate 100
+
+free a and c
+
+allocate 100
+
+allocate 200
+
+FIRST FIT
+
+allocations
+
+|-- a --|- b -|- c -|
+
+after freeing:
+
+|-- free --|- b -|- free -|
+
+allocate 100
+
+|- d -|- free -|- b -|- free -|
+
+allocate 200
+
+No block is large enough to allocate 200 bytes: failure.
+
+
+BEST FIT
+
+allocations
+
+|-- a --|- b -|- c -|
+
+after freeing:
+
+|-- free --|- b -|- free -|
+
+allocate 100
+
+|- free -|- b -|- d -|
+
+allocate 200
+
+|- f -|- b -|- d -|

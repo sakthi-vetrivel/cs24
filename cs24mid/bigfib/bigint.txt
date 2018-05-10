@@ -1,12 +1,91 @@
 ------------------------------------------------------------------------------
 1)  Pseudocode for __add_bigint
 
+__add_bigint(int * a, int * b, int size)
+  if (size == 0) {
+    return 1;
+  }
+  clear carry flag
+  i = 0;
+  while (size > 0) {
+    adc a[i], b[i]
+    size--;
+    i++;
+  }
+  if (carry flag)
+    return 0;
+
+  return 1;
+}
+
+
+
+a stored in rdi (since 8 bytes = long)
+b stored in rsi (since 8 bytes = long)
+size stored in dl (since 1 byte)
+i stored in cl (since 1 byte)
+
+
+mov $0, %cl
+cmp %dl, %cl
+jge done
+
+i = 0
+if (size == 0)
+  jump to done
+
+clear r10, and r11
+r10 gets a[i]
+r11 gets b[i]
+
+adc r11, r10
+mov r11 into b[i]
+i++
+if (size == i)
+  jump to done
+
+done:
+  if carry_flag
+    move $1 into eax
+  else
+    move $0 into eax
+  ret
+
+__add_bigint:
+
+mov $0, %cl
+cmp %dl, %cl
+je done
+
+add_loop:
+  xor %r11, %r11
+  xor %r10, %r10
+  mov (%rdi, %rcx), %r10
+  mov (%rsi, %rcx), %r11
+  adc %r11, %r10
+  mov %r11, (%rdi, %rcx)
+  inc %cl
+  cmp %dl, %cl
+  je done
+
+done:
+  jc fail
+  movw $1, $eax
+  ret
+
+fail:
+  mov $0, %eax
+  ret
+
 
 ------------------------------------------------------------------------------
 3)  Largest n for fib(n) using four 64-bit quadwords for bigint:
 
+The largest number four 64-bit quadwords can store is 1.16 * 10 ^77.
+So, the largest n for fib(n) is fib(370).
+
 
 ------------------------------------------------------------------------------
 4)  Number of 64-bit quadwords required for fib(2000), and value of fib(2000):
-
-
+fib(2000) = 4.22 * 10 ^417
+This would take 22 64-bit quadwords
