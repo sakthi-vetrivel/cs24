@@ -1,0 +1,23 @@
+Multimap Caching Performance
+============================
+
+a)  Size of hardware cache lines:
+
+
+
+b)  Output of mmperf:
+
+
+
+c)  Explanation of tests:
+
+
+
+e)  Explanation of your optimizations:
+
+
+
+f)  Output of ommperf:
+
+
+
