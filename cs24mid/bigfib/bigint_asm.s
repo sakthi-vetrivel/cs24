@@ -1,6 +1,7 @@
 # The int __add_bigint(uint64_t *a, uint64_t *b, uint8_t size) function adds
-# two large integers a and b that are represented as arrays of size size of
-# 8-byte quadwords. The function returns 1 if there is overflow detected
+# two large integers a and b that are represented as arrays of size "size" of
+# 8-byte quadwords. The function returns 0 if there is overflow detected,
+# otherwise, it returns 1.
 # a stored in rdi
 # b stored in rsi
 # size stored in dl
