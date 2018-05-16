@@ -1,0 +1,27 @@
+(a)
+
+750M instructions per second
+
+hit rate = 1 - miss rate
+miss rate = # misses / # references
+
+3 GHz processor with 1 cycle of access latency and a main memory with 100 cycles
+of latency, needs 1 data values per instruction
+
+cycles/operation = 3G/750M = 4 cycles per operation
+cycles/operation = hit rate * hit time + miss rate * miss penalty
+              4  = (1 - miss rate) * 1 + miss rate * 100
+              miss rate = 3.03%
+
+(b)
+1500 instructions per second
+hit rate = 1 - miss rate
+miss rate = # misses / # references
+
+3 GHz processor with 1 cycle of access latency and a main memory with 100 cycles
+of latency, needs 1 data values per instruction
+
+cycles/operation = 3G/1500M = 2 cycles per operation
+cycles/operation = hit rate * hit time + miss rate * miss penalty
+              2  = (1 - miss rate) * 1 + miss rate * 100
+              miss rate = 1.01%

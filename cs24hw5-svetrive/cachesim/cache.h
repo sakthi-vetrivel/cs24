@@ -13,6 +13,9 @@ typedef struct cacheline_t {
      */
     uint32_t line_no;
 
+    /* This value keeps track of when this line was most recently used.*/
+    uint64_t t;
+    
     /* This value will be 0 if the line is invalid, 1 if it is valid. */
     char valid;
 
@@ -21,7 +24,7 @@ typedef struct cacheline_t {
 
     /* This is the tag for the cache line, taken from the address. */
     uint32_t tag;
-    
+
     /* This is the start of the block of data itself. */
     unsigned char *block;
 } cacheline_t;
@@ -54,22 +57,22 @@ typedef struct cacheset_t {
 typedef struct cache_t {
     /* The number of reads that occurred at this level of the memory. */
     uint64_t num_reads;
-    
+
     /* The number of writes that occurred at this level of the memory. */
     uint64_t num_writes;
 
     /* The function to read a byte from the cache. */
     unsigned char (*read_byte)(membase_t *mb, addr_t address);
-    
+
     /* The function to write a byte to the cache. */
     void (*write_byte)(membase_t *mb, addr_t address, unsigned char value);
- 
+
     /* The function to print the cache's access statistics. */
     void (*print_stats)(struct membase_t *mb);
- 
+
     /* The function to reset the cache's access statistics. */
     void (*reset_stats)(struct membase_t *mb);
- 
+
     /* The function to release any internally allocated data used by
      * the memory.
      */
@@ -121,4 +124,3 @@ int flush_cache(cache_t *p_cache);
 
 
 #endif /* CACHE_H */
-
