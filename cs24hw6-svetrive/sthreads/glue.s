@@ -28,7 +28,24 @@ scheduler_context:      .quad   0
 __sthread_switch:
 
         # Save the process state onto its stack
-        # TODO
+        pushq %rax
+        pushq %rbx
+        pushq %rcx
+        pushq %rdx
+        pushq %rsi
+        pushq %rdi
+        pushq %rbp
+        pushq %r8
+        pushq %r9
+        pushq %r10
+        pushq %r11
+        pushq %r12
+        pushq %r13
+        pushq %r14
+        pushq %r15
+
+        pushf
+
 
         # Call the high-level scheduler with the current context as an argument
         movq    %rsp, %rdi
@@ -38,8 +55,25 @@ __sthread_switch:
         # The scheduler will return a context to start.
         # Restore the context to resume the thread.
 __sthread_restore:
+        movq %rax, %rsp
 
-        # TODO
+        popf
+
+        popq  %r15
+        popq  %r14
+        popq  %r13
+        popq  %r12
+        popq  %r11
+        popq  %r10
+        popq  %r9
+        popq  %r8
+        popq  %rbp
+        popq  %rdi
+        popq  %rsi
+        popq  %rdx
+        popq  %rcx
+        popq  %rbx
+        popq  %rax
 
         ret
 
@@ -62,11 +96,29 @@ __sthread_restore:
         .globl __sthread_initialize_context
 __sthread_initialize_context:
 
-        # TODO
+        movq %rdi, %rax
+        subq $144, %rax
 
-        # TODO - Make sure you completely document every part of your
-        #        thread context; what it is, and why you set each value
-        #        to what you choose.
+        movq $__sthread_finish, 136(%rax)
+
+        movq %rsi, 128(%rax)
+        movq $0, 120(%rax)
+        movq $0, 112(%rax)
+        movq $0, 104(%rax)
+        movq $0, 96(%rax)
+        movq $0, 88(%rax)
+
+        movq %rdx, 80(%rax)
+        movq $0, 72(%rax)
+        movq $0, 64(%rax)
+        movq $0, 56(%rax)
+        movq $0, 48(%rax)
+        movq $0, 40(%rax)
+        movq $0, 32(%rax)
+        movq $0, 24(%rax)
+        movq $0, 16(%rax)
+        movq $0, 8(%rax)
+        movq $0, (%rax)
 
         ret
 
@@ -89,4 +141,3 @@ __sthread_start:
 
         # Restore the context returned by the scheduler
         jmp     __sthread_restore
-

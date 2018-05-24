@@ -128,10 +128,36 @@ static void enqueue_thread(Thread *threadp) {
  * This function is global because it needs to be called from the assembly.
  */
 ThreadContext *__sthread_scheduler(ThreadContext *context) {
+    if (context != NULL) {
+      assert(current != NULL);
+      if (current->state == ThreadRunning) {
+        current->state = ThreadReady;
+      }
+      if (current->state != ThreadFinished) {
+        // queue up the current thread
+        current->context = context;
+        enqueue_thread(current);
+      }
+      else {
+        // deallocate the current thread
+        __sthread_delete(current);
+      }
+    }
 
-    /* TODO:  Replace these lines with your implementation */
-    /* TODO */ assert(0); /* TODO */
+    // Select a new ready thread to run
+    current = queue_take(&ready_queue);
+    if (current == NULL) {
+      if (queue_empty(&blocked_queue)) {
+        fprintf(stderr, "All threads in this program completed successfully\n");
+        exit(0);
+      }
+      else {
+        fprintf(stderr, "Program has become deadlocked.\n");
+        exit(1);
+      }
+    }
 
+    current->state = ThreadRunning;
     /* Return the next thread to resume executing. */
     return current->context;
 }
@@ -156,9 +182,26 @@ void sthread_start(void)
  * structure, and it adds the thread to the Ready queue.
  */
 Thread * sthread_create(void (*f)(void *arg), void *arg) {
-    /* TODO:  Replace this function's body with your implementation */
-    /* TODO */ assert(0); /* TODO */
-    return NULL;
+    Thread *t;
+    void *mem;
+
+    mem = (void *) malloc(DEFAULT_STACKSIZE);
+    if (mem == NULL) {
+      fprintf(stderr, "Couldn't allocate memory for stack for new thread\n");
+      exit(1);
+    }
+
+    t = (Thread *) malloc(sizeof(Thread));
+    if (t == NULL) {
+      fprintf(stderr, "Couldn't allocate memory for the new thread\n");
+      free(mem);
+      exit(1);
+    }
+    t->state = ThreadReady;
+    t->memory = mem;
+    t->context = __sthread_initialize_context((char *) mem + DEFAULT_STACKSIZE, f, arg);
+    enqueue_thread(t);
+    return t;
 }
 
 
@@ -183,8 +226,9 @@ void __sthread_finish(void) {
  * context, as well as the memory for the Thread struct.
  */
 void __sthread_delete(Thread *threadp) {
-    /* TODO:  Replace this function's body with your implementation */
-    /* TODO */ assert(0); /* TODO */
+    assert(threadp != NULL);
+    free(threadp->memory);
+    free(threadp);
 }
 
 
@@ -223,4 +267,3 @@ void sthread_unblock(Thread *threadp) {
     threadp->state = ThreadReady;
     enqueue_thread(threadp);
 }
-

@@ -36,32 +36,20 @@
  */
 
 /*! This thread-function prints "Hello" over and over again! */
-static void loop1(void *arg) {
-  int b = (intptr_t) arg;
-  while(b < 10) {
-      (b)++;
-      printf("Hello %d\n", b);
-      sthread_yield();
-  }
+static void loop(void *arg) {
+    int b = (intptr_t) arg;
+    while(b > 0) {
+        printf("Hello %d\n", b);
+        b--;
+        sthread_yield();
+    }
 }
 
-/*! This thread-function prints "Goodbye" over and over again! */
-static void loop2(void *arg) {
-  int b = (intptr_t) arg;
-  while(b < 10) {
-      (b)++;
-      printf("Goodbye %d\n", b);
-      sthread_yield();
-  }
-}
-
-/*
- * The main function starts the two loops in separate threads,
- * the start the thread scheduler.
- */
 int main(int argc, char **argv) {
-    sthread_create(loop1, (void *) 5);
-    sthread_create(loop2, (void *) 5);
+    sthread_create(loop, (void *) 20);
+    sthread_create(loop, (void *) 10);
+    sthread_create(loop, (void *) 5);
+    sthread_create(loop, (void *) 20);
     sthread_start();
     return 0;
 }
