@@ -24,9 +24,9 @@
  * @end[license]
  */
 #include <stdio.h>
+#include <stdint.h>
 #include "sthread.h"
 
-static int a = 0;
 /*
  * Thread 1 prints "Hello".
  * Thread 2 prints "Goodbye".
@@ -37,22 +37,22 @@ static int a = 0;
 
 /*! This thread-function prints "Hello" over and over again! */
 static void loop1(void *arg) {
-    int * b = (int *) arg;
-    while(1) {
-        (*b)++;
-        printf("Hello %d\n", *b);
-        sthread_yield();
-    }
+  int b = (intptr_t) arg;
+  while(b < 10) {
+      (b)++;
+      printf("Hello %d\n", b);
+      sthread_yield();
+  }
 }
 
 /*! This thread-function prints "Goodbye" over and over again! */
 static void loop2(void *arg) {
-    int * b = (int *) arg;
-    while(1) {
-        (*b)++;
-        printf("Goodbye %d\n", *b);
-        sthread_yield();
-    }
+  int b = (intptr_t) arg;
+  while(b < 10) {
+      (b)++;
+      printf("Goodbye %d\n", b);
+      sthread_yield();
+  }
 }
 
 /*
@@ -60,8 +60,8 @@ static void loop2(void *arg) {
  * the start the thread scheduler.
  */
 int main(int argc, char **argv) {
-    sthread_create(loop1, &a);
-    sthread_create(loop2, &a);
+    sthread_create(loop1, (void *) 5);
+    sthread_create(loop2, (void *) 5);
     sthread_start();
     return 0;
 }

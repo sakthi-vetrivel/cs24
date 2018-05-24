@@ -55,9 +55,11 @@ __sthread_switch:
         # The scheduler will return a context to start.
         # Restore the context to resume the thread.
 __sthread_restore:
-        movq %rax, %rsp
+        movq %rax, %rsp     # The returned value should be our stack pointer
 
         popf
+
+        # Pop items off of stack into the register to restore
 
         popq  %r15
         popq  %r14
@@ -96,29 +98,30 @@ __sthread_restore:
         .globl __sthread_initialize_context
 __sthread_initialize_context:
 
-        movq %rdi, %rax
-        subq $144, %rax
+        movq %rdi, %rax      # Move return value (the stack pointer) into return
+        subq $144, %rax      # Moving backward 144 bytes to get the start of the
+                             # stack
 
-        movq $__sthread_finish, 136(%rax)
+        movq $__sthread_finish, 136(%rax)   # Address of the function at the top
 
-        movq %rsi, 128(%rax)
-        movq $0, 120(%rax)
-        movq $0, 112(%rax)
-        movq $0, 104(%rax)
-        movq $0, 96(%rax)
-        movq $0, 88(%rax)
+        movq %rsi, 128(%rax)  # Return address of this function
+        movq $0, 120(%rax)    # rax = 0
+        movq $0, 112(%rax)    # rbx = 0
+        movq $0, 104(%rax)    # rcx = 0
+        movq $0, 96(%rax)     # rdx = 0
+        movq $0, 88(%rax)     # rsi = 0
 
-        movq %rdx, 80(%rax)
-        movq $0, 72(%rax)
-        movq $0, 64(%rax)
-        movq $0, 56(%rax)
-        movq $0, 48(%rax)
-        movq $0, 40(%rax)
-        movq $0, 32(%rax)
-        movq $0, 24(%rax)
-        movq $0, 16(%rax)
-        movq $0, 8(%rax)
-        movq $0, (%rax)
+        movq %rdx, 80(%rax)   # Argument for function, rdi
+        movq $0, 72(%rax)     # rbp = 0
+        movq $0, 64(%rax)     # r8 = 0
+        movq $0, 56(%rax)     # r9 = 0
+        movq $0, 48(%rax)     # r10 = 0
+        movq $0, 40(%rax)     # r11 = 0
+        movq $0, 32(%rax)     # r12 = 0
+        movq $0, 24(%rax)     # r13 = 0
+        movq $0, 16(%rax)     # r14 = 0
+        movq $0, 8(%rax)      # r15 = 0
+        movq $0, (%rax)       # rflags = 0
 
         ret
 

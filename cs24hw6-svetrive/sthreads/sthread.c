@@ -128,11 +128,15 @@ static void enqueue_thread(Thread *threadp) {
  * This function is global because it needs to be called from the assembly.
  */
 ThreadContext *__sthread_scheduler(ThreadContext *context) {
+    // Check if we are given a valid argument
     if (context != NULL) {
+      // Want to make sure we have a current thread, otherwsie something has gone wrong
       assert(current != NULL);
+      // Check if the thread is running
       if (current->state == ThreadRunning) {
         current->state = ThreadReady;
       }
+      // If the thread isn't finished, want to set the context of the new thread
       if (current->state != ThreadFinished) {
         // queue up the current thread
         current->context = context;
@@ -185,20 +189,24 @@ Thread * sthread_create(void (*f)(void *arg), void *arg) {
     Thread *t;
     void *mem;
 
+    // Allocate memory for the stack
     mem = (void *) malloc(DEFAULT_STACKSIZE);
     if (mem == NULL) {
       fprintf(stderr, "Couldn't allocate memory for stack for new thread\n");
       exit(1);
     }
 
+    // Allocate memory for the thread
     t = (Thread *) malloc(sizeof(Thread));
     if (t == NULL) {
       fprintf(stderr, "Couldn't allocate memory for the new thread\n");
       free(mem);
       exit(1);
     }
+    // Set data for the thread
     t->state = ThreadReady;
     t->memory = mem;
+    // Initialize context with pointer to top of the stack
     t->context = __sthread_initialize_context((char *) mem + DEFAULT_STACKSIZE, f, arg);
     enqueue_thread(t);
     return t;
@@ -226,6 +234,7 @@ void __sthread_finish(void) {
  * context, as well as the memory for the Thread struct.
  */
 void __sthread_delete(Thread *threadp) {
+    // Free memory for the thread
     assert(threadp != NULL);
     free(threadp->memory);
     free(threadp);
