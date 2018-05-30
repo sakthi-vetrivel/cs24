@@ -156,7 +156,6 @@ int main(int argc, char **argv) {
      * Start the thread scheduler.  By default, the timer is
      * not started.  Change the argument to 1 to start the timer.
      */
-    sthread_start(0);
+    sthread_start(1);
     return 0;
 }
-

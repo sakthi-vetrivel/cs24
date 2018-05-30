@@ -1,0 +1,4 @@
+Producer 0 always runs before Producer 1, so after Producer 0 runs, the buffer
+is filled with data. When Producer 1 runs, the buffer is already full so it
+yields. Then the Consumer prints out the buffer that Producer 0 filled until
+it is empty, so it appears like Producer 1 never runs. 

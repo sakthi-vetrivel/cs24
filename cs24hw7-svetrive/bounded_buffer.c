@@ -12,6 +12,7 @@
 #include <memory.h>
 
 #include "sthread.h"
+#include "semaphore.h"
 #include "bounded_buffer.h"
 
 /*
@@ -29,6 +30,13 @@ struct _bounded_buffer {
 
     /* The values in the buffer */
     BufferElem *buffer;
+
+    Semaphore * has_space;
+
+    Semaphore * has_data;
+
+    Semaphore * access;
+
 };
 
 
@@ -64,6 +72,10 @@ BoundedBuffer *new_bounded_buffer(int length) {
     bufp->length = length;
     bufp->buffer = buffer;
 
+    bufp->has_space = new_semaphore(length);
+    bufp->has_data = new_semaphore(0);
+    bufp->access = new_semaphore(1);
+
     return bufp;
 }
 
@@ -72,17 +84,16 @@ BoundedBuffer *new_bounded_buffer(int length) {
  * thread if the buffer is full.
  */
 void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *elem) {
-    /* Wait until the buffer has space */
-    while (bufp->count == bufp->length)
-        sthread_yield();
 
-    /* Now the buffer has space.  Copy the element data over. */
-    int idx = (bufp->first + bufp->count) % bufp->length;
-    bufp->buffer[idx].id  = elem->id;
-    bufp->buffer[idx].arg = elem->arg;
-    bufp->buffer[idx].val = elem->val;
+    semaphore_wait(bufp->has_space);
+    semaphore_wait(bufp->access);
+    /* Wait until the buffer has space */
+    bufp->buffer[(bufp->first + bufp->count) % bufp->length] = *elem;
 
     bufp->count = bufp->count + 1;
+
+    semaphore_signal(bufp->access);
+    semaphore_signal(bufp->has_data);
 }
 
 /*
@@ -90,20 +101,17 @@ void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *elem) {
  * thread if the buffer is empty.
  */
 void bounded_buffer_take(BoundedBuffer *bufp, BufferElem *elem) {
-    /* Wait until the buffer has a value to retrieve */
-    while (bufp->count == 0)
-        sthread_yield();
+  semaphore_wait(bufp->has_data);
+  semaphore_wait(bufp->access);
+  /* Copy the element from the buffer, and clear the record */
+  *elem = bufp->buffer[bufp->first];
+  bufp->buffer[bufp->first].id = EMPTY;
+  bufp->buffer[bufp->first].arg = EMPTY;
+  bufp->buffer[bufp->first].val = EMPTY;
 
-    /* Copy the element from the buffer, and clear the record */
-    elem->id  = bufp->buffer[bufp->first].id;
-    elem->arg = bufp->buffer[bufp->first].arg;
-    elem->val = bufp->buffer[bufp->first].val;
+  bufp->count = bufp->count - 1;
+  bufp->first = (bufp->first + 1) % bufp->length;
 
-    bufp->buffer[bufp->first].id  = -1;
-    bufp->buffer[bufp->first].arg = -1;
-    bufp->buffer[bufp->first].val = -1;
-
-    bufp->count = bufp->count - 1;
-    bufp->first = (bufp->first + 1) % bufp->length;
+  semaphore_signal(bufp->access);
+  semaphore_signal(bufp->has_space);
 }
-

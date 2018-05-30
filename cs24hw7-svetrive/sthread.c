@@ -30,6 +30,10 @@ void __sthread_start(void);
  */
 void __sthread_switch(void);
 
+void __sthread_lock(void);
+
+void __sthread_unlock(void);
+
 /*!
  * Initialize the context for a new thread.
  *
@@ -183,6 +187,7 @@ ThreadContext *__sthread_scheduler(ThreadContext *context) {
  * Start the scheduler.
  */
 void sthread_start(int timer) {
+    __sthread_lock();
     if (timer)
         start_timer();
 
@@ -242,6 +247,7 @@ Thread * sthread_current(void) {
  * This function is global because it needs to be referenced from assembly.
  */
 void __sthread_finish(void) {
+    __sthread_lock();
     printf("Thread %p has finished executing.\n", (void *) current);
     current->state = ThreadFinished;
     __sthread_switch();
@@ -266,6 +272,7 @@ void __sthread_delete(Thread *threadp) {
  * call the scheduler, and it will pick a new thread to run.
  */
 void sthread_yield() {
+    __sthread_lock();
     __sthread_switch();
 }
 
@@ -275,6 +282,7 @@ void sthread_yield() {
  * to Blocked, and call the scheduler.
  */
 void sthread_block() {
+    __sthread_lock();
     current->state = ThreadBlocked;
     __sthread_switch();
 }
@@ -289,11 +297,14 @@ void sthread_unblock(Thread *threadp) {
     /* Make sure the thread was blocked */
     assert(threadp->state == ThreadBlocked);
 
+    __sthread_lock();
+
     /* Remove from the blocked queue */
     queue_remove(&blocked_queue, threadp);
 
     /* Re-queue it */
     threadp->state = ThreadReady;
     enqueue_thread(threadp);
-}
 
+    __sthread_unlock();
+}

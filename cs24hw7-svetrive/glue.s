@@ -21,10 +21,9 @@ scheduler_lock:         .long   0
         .align 8
         .globl __sthread_lock
 __sthread_lock:
-        # TODO: currently this code always returns 1 (it always grants
-        # the lock).  Fix this code, using the "scheduler_lock" variable
-        # to ensure mutual exlucsion.
-        movl    $1, %eax
+        movl  $1, %eax
+        xchgl %eax, scheduler_lock
+        xorl  $1, %eax
         ret
 
 
@@ -34,7 +33,7 @@ __sthread_lock:
         .align 8
         .globl __sthread_unlock
 __sthread_unlock:
-        # TODO: release the lock.
+        movl $0, scheduler_lock
         ret
 
 
@@ -108,6 +107,8 @@ __sthread_restore:
         popq    %rbx
         popq    %rax
 
+        call    __sthread_unlock
+
         ret
 
 
@@ -179,4 +180,3 @@ __sthread_start:
 
         # Restore the context returned by the scheduler
         jmp     __sthread_restore
-

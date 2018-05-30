@@ -98,6 +98,10 @@ void sthread_yield(void);
 void sthread_block(void);
 void sthread_unblock(Thread *threadp);
 
+void __sthread_lock(void);
+
+void __sthread_unlock(void);
+
 
 /*
  * The start function should be called *once* in
@@ -108,4 +112,3 @@ void sthread_start(int timer);
 
 
 #endif /* _STHREAD_H */
-
