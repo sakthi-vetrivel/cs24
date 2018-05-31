@@ -32,10 +32,10 @@ struct _bounded_buffer {
     BufferElem *buffer;
 
     /* Semaphore to keep track of whether the bounded buffer has space*/
-    Semaphore * has_space;
+    Semaphore * space;
 
     /* Semaphore to keep track of whether the bounded buffer contains data*/
-    Semaphore * has_data;
+    Semaphore * is_filled;
 
     /* Semaphore to control access to the bounded buffer, since we only want
      * one thread to access it at a time
@@ -77,8 +77,8 @@ BoundedBuffer *new_bounded_buffer(int length) {
     bufp->buffer = buffer;
 
     // Semaphore to determine if the buffer has space or data
-    bufp->has_space = new_semaphore(length);
-    bufp->has_data = new_semaphore(0);
+    bufp->space = new_semaphore(length);
+    bufp->is_filled = new_semaphore(0);
     // Semaphore to allow access to only one thread at a time
     bufp->access = new_semaphore(1);
 
@@ -91,7 +91,7 @@ BoundedBuffer *new_bounded_buffer(int length) {
  */
 void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *elem) {
     /* Wait until the buffer has space */
-    semaphore_wait(bufp->has_space);
+    semaphore_wait(bufp->space);
     semaphore_wait(bufp->access);
 
     /* Update buffer and count*/
@@ -100,7 +100,7 @@ void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *elem) {
 
     /* Signal that we have data and are giving up access*/
     semaphore_signal(bufp->access);
-    semaphore_signal(bufp->has_data);
+    semaphore_signal(bufp->is_filled);
 }
 
 /*
@@ -109,7 +109,7 @@ void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *elem) {
  */
 void bounded_buffer_take(BoundedBuffer *bufp, BufferElem *elem) {
   /* Wait until the buffer has space*/
-  semaphore_wait(bufp->has_data);
+  semaphore_wait(bufp->is_filled);
   semaphore_wait(bufp->access);
   /* Copy the element from the buffer, and clear the record */
   *elem = bufp->buffer[bufp->first];
@@ -123,5 +123,5 @@ void bounded_buffer_take(BoundedBuffer *bufp, BufferElem *elem) {
 
   // Signal to other thread waiting for space
   semaphore_signal(bufp->access);
-  semaphore_signal(bufp->has_space);
+  semaphore_signal(bufp->space);
 }
