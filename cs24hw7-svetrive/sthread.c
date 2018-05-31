@@ -187,6 +187,7 @@ ThreadContext *__sthread_scheduler(ThreadContext *context) {
  * Start the scheduler.
  */
 void sthread_start(int timer) {
+    // Don't want to allow other threads, so lock
     __sthread_lock();
     if (timer)
         start_timer();
@@ -247,6 +248,8 @@ Thread * sthread_current(void) {
  * This function is global because it needs to be referenced from assembly.
  */
 void __sthread_finish(void) {
+    // Lock before manipulating the scheduler state. We don't want to change
+    //  the state from multiple threads.
     __sthread_lock();
     printf("Thread %p has finished executing.\n", (void *) current);
     current->state = ThreadFinished;
@@ -261,7 +264,6 @@ void __sthread_finish(void) {
  */
 void __sthread_delete(Thread *threadp) {
     assert(threadp != NULL);
-
     free(threadp->memory);
     free(threadp);
 }
@@ -272,6 +274,8 @@ void __sthread_delete(Thread *threadp) {
  * call the scheduler, and it will pick a new thread to run.
  */
 void sthread_yield() {
+    // Lock before manipulating the scheduler state. We don't want to change
+    //  the state from multiple threads.
     __sthread_lock();
     __sthread_switch();
 }
@@ -282,6 +286,8 @@ void sthread_yield() {
  * to Blocked, and call the scheduler.
  */
 void sthread_block() {
+    // Lock before manipulating the scheduler state. We don't want to change
+    //  the state from multiple threads.
     __sthread_lock();
     current->state = ThreadBlocked;
     __sthread_switch();
@@ -297,6 +303,8 @@ void sthread_unblock(Thread *threadp) {
     /* Make sure the thread was blocked */
     assert(threadp->state == ThreadBlocked);
 
+    // Lock before manipulating the scheduler state. We don't want to change
+    //  the state from multiple threads.
     __sthread_lock();
 
     /* Remove from the blocked queue */
@@ -306,5 +314,7 @@ void sthread_unblock(Thread *threadp) {
     threadp->state = ThreadReady;
     enqueue_thread(threadp);
 
+    // Now that we're done manipulating the state, we unlock so other threads
+    // can make changes
     __sthread_unlock();
 }

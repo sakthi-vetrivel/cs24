@@ -35,4 +35,3 @@ void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *s);
 void bounded_buffer_take(BoundedBuffer *bufp, BufferElem *s);
 
 #endif /* _BOUNDED_BUFFER_H */
-

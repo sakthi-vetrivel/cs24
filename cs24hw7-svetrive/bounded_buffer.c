@@ -31,17 +31,21 @@ struct _bounded_buffer {
     /* The values in the buffer */
     BufferElem *buffer;
 
+    /* Semaphore to keep track of whether the bounded buffer has space*/
     Semaphore * has_space;
 
+    /* Semaphore to keep track of whether the bounded buffer contains data*/
     Semaphore * has_data;
 
+    /* Semaphore to control access to the bounded buffer, since we only want
+     * one thread to access it at a time
+     */
     Semaphore * access;
 
 };
 
 
 #define EMPTY -1
-
 
 /*
  * Allocate a new bounded buffer.
@@ -72,8 +76,10 @@ BoundedBuffer *new_bounded_buffer(int length) {
     bufp->length = length;
     bufp->buffer = buffer;
 
+    // Semaphore to determine if the buffer has space or data
     bufp->has_space = new_semaphore(length);
     bufp->has_data = new_semaphore(0);
+    // Semaphore to allow access to only one thread at a time
     bufp->access = new_semaphore(1);
 
     return bufp;
@@ -84,14 +90,15 @@ BoundedBuffer *new_bounded_buffer(int length) {
  * thread if the buffer is full.
  */
 void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *elem) {
-
+    /* Wait until the buffer has space */
     semaphore_wait(bufp->has_space);
     semaphore_wait(bufp->access);
-    /* Wait until the buffer has space */
-    bufp->buffer[(bufp->first + bufp->count) % bufp->length] = *elem;
 
+    /* Update buffer and count*/
+    bufp->buffer[(bufp->first + bufp->count) % bufp->length] = *elem;
     bufp->count = bufp->count + 1;
 
+    /* Signal that we have data and are giving up access*/
     semaphore_signal(bufp->access);
     semaphore_signal(bufp->has_data);
 }
@@ -101,6 +108,7 @@ void bounded_buffer_add(BoundedBuffer *bufp, const BufferElem *elem) {
  * thread if the buffer is empty.
  */
 void bounded_buffer_take(BoundedBuffer *bufp, BufferElem *elem) {
+  /* Wait until the buffer has space*/
   semaphore_wait(bufp->has_data);
   semaphore_wait(bufp->access);
   /* Copy the element from the buffer, and clear the record */
@@ -109,9 +117,11 @@ void bounded_buffer_take(BoundedBuffer *bufp, BufferElem *elem) {
   bufp->buffer[bufp->first].arg = EMPTY;
   bufp->buffer[bufp->first].val = EMPTY;
 
+  // Update the count and remove the element
   bufp->count = bufp->count - 1;
   bufp->first = (bufp->first + 1) % bufp->length;
 
+  // Signal to other thread waiting for space
   semaphore_signal(bufp->access);
   semaphore_signal(bufp->has_space);
 }

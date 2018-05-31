@@ -21,9 +21,12 @@ scheduler_lock:         .long   0
         .align 8
         .globl __sthread_lock
 __sthread_lock:
-        movl  $1, %eax
-        xchgl %eax, scheduler_lock
-        xorl  $1, %eax
+        movl  $1, %eax                # Prepare for output
+        xchgl %eax, scheduler_lock    # Exchange value for scheduler_lock
+                                      # If the lock is already in place, %eax
+                                      #   holds 1, otherwise, this unlocks
+                                      #   and %eax holds 0
+        xorl  $1, %eax                # if not lock, return 0, if lock, 1
         ret
 
 
@@ -33,8 +36,8 @@ __sthread_lock:
         .align 8
         .globl __sthread_unlock
 __sthread_unlock:
-        movl $0, scheduler_lock
-        ret
+        movl $0, scheduler_lock       # Change value for the lock
+        ret                           # Return
 
 
 #============================================================================
@@ -107,7 +110,7 @@ __sthread_restore:
         popq    %rbx
         popq    %rax
 
-        call    __sthread_unlock
+        call    __sthread_unlock    # To restore, we need to unlock
 
         ret
 
