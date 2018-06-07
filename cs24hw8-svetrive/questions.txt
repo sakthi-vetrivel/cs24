@@ -20,10 +20,11 @@ accordingly.
 
 f)  Page-load rate of "test_matrix -m 1024 1000" using RANDOM policy:
 
-52199, 53040,
+About 53 k
+
 g)  Page Replacement Policy #1 (fill in the information below)
 
-Name of policy you chose to implement:
+Name of policy you chose to implement: FIFO
 
 Below, give the command-line for invoking the matrix-test program for a
 1000x1000 matrix, with a maximum of 1024 resident pages.  (If multiple
@@ -31,8 +32,9 @@ steps are required, list them all here.)
 
   >>>
 
+make
+./test_matrix_fifo -m 1024 1000
 
-test_matrix_fifo
 Give the resulting page-load rate of the above command:
 
 47944
@@ -44,15 +46,19 @@ what the assignment says about the policy here.
 
 h)  Page Replacement Policy #2 (if you implemented two policies)
 
-Name of policy you chose to implement:
+Name of policy you chose to implement: Clock/LRU
 
 Below, give the command-line for invoking the matrix-test program for a
 1000x1000 matrix, with a maximum of 1024 resident pages.  (If multiple
-steps are required, list them all here.)
+steps are required, list them all here.
 
   >>>
+  make
+  ./test_matrix_clru -m 1024 1000
 
 Give the resulting page-load rate of the above command:
+
+
 
 If you have any additional information to share about your policy, please
 share it here.  Please keep your comments brief; you don't need to repeat

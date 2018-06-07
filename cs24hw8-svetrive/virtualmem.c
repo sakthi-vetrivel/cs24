@@ -445,22 +445,27 @@ void map_page(page_t page, unsigned initial_perm) {
                 "= %u, max resident = %u\n", num_resident, max_resident);
         abort();
     }
-    //TODO ------------------------------------------------------------------------------
-     void * return_addr = mmap(page_to_addr(page), PAGE_SIZE,
+
+    /* Using the mmap() function to add the page's address-range to the process'
+       virutal memory.*/
+    void * return_addr = mmap(page_to_addr(page), PAGE_SIZE,
         PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     if (return_addr != page_to_addr(page)) {
         fprintf(stderr, "Return addr doesn't match address for page %d", page);
         abort();
     }
+    /*If there is no mapping for this page*/
     if (return_addr == MAP_FAILED) {
         // Need to print out an error message here
         abort();
     }
 
+    /* Seek to the start of the corresponding slot in the swap file using lseek()*/
     if (lseek(fd_swapfile, page * PAGE_SIZE, SEEK_SET) == -1) {
         perror("lseek");
         abort();
     }
+    /* Read the slot's contents into the page we mapped earlier*/
     int data_size = read(fd_swapfile, page_to_addr(page), PAGE_SIZE);
     if (data_size == -1) {
         perror("read");
@@ -470,6 +475,8 @@ void map_page(page_t page, unsigned initial_perm) {
         fprintf(stderr, "Error! Read an unexpected number of bytes\n");
         abort();
     }
+
+    /* Update the page table entry and set the appropriate permissions */
     set_page_resident(page);
     set_page_permission(page, initial_perm);
 
@@ -495,14 +502,17 @@ void unmap_page(page_t page) {
     assert(num_resident > 0);
     assert(is_page_resident(page));
 
+
     if(is_page_dirty(page)) {
         set_page_permission(page, PAGEPERM_READ);
-
+        /* If the page is dirty, seek to the start of the corresponding slot in the swap file
+           using lseek() */
         if (lseek(fd_swapfile, page * PAGE_SIZE, SEEK_SET) == -1) {
             perror("lseek");
             abort();
         }
 
+        /* Save the page's contents to the slot using the write() function */
         int data_size = write(fd_swapfile, page_to_addr(page), PAGE_SIZE);
         if (data_size == -1) {
             perror("write");
@@ -514,11 +524,14 @@ void unmap_page(page_t page) {
         }
     }
 
+    /* Using the munmap() to remove the page's address-range from the process's
+       virtal address space*/
     if (munmap(page_to_addr(page), PAGE_SIZE) == -1) {
         perror("munmap");
         abort();
     }
 
+    // Update the page table entry
     clear_page_entry(page);
 
     assert(!is_page_resident(page));
@@ -573,38 +586,51 @@ static void sigsegv_handler(int signum, siginfo_t *infop, void *data) {
      * this may result in some other page being unmapped.
      */
 
-     // Page is simply unmapped
+     // If the faulting address had no corresponding mapping
     if (infop->si_code == SEGV_MAPERR) {
         assert(num_resident <= max_resident);
         if (num_resident == max_resident) {
+            // Reached limit, need to remove a page
             page_t victim = choose_and_evict_victim_page();
             assert(is_page_resident(victim));
             unmap_page(victim);
             assert(! (is_page_resident(victim)));
         }
 
+        // Map this page with permissions and set flag
         map_page(page, PAGEPERM_READ);
         set_page_accessed(page);
     }
+    // If the address is valid but the access violated the current constraints
+    // on the page
     else {
         assert(infop->si_code == SEGV_ACCERR);
         pte_t pte = page_table[page];
         assert(pte & PAGE_RESIDENT);
 
+        // We want to see what the permission of the page are according to the
+        // table
         switch(pte & PAGEPERM_MASK) {
+            // If no permissions are granted
             case PAGEPERM_NONE:
+                // Set permissions and flag and assert they have been
+                // set to check
                 set_page_permission(page, PAGEPERM_READ);
                 set_page_accessed(page);
                 assert(get_page_permission(page) == PAGEPERM_READ);
                 assert(is_page_accessed(page));
                 break;
+            // If only read permissions are granted
             case PAGEPERM_READ:
+                // Set permissions and flag and assert they have been
+                // set to check
                 set_page_dirty(page);
                 set_page_permission(page, PAGEPERM_RDWR);
                 assert(get_page_permission(page) == PAGEPERM_RDWR);
                 assert(is_page_dirty(page));
                 break;
             default :
+                // Something went super wrong
                 fprintf(stderr, "SEGV_ACCERR, but did not match cases\n");
                 abort();
         }

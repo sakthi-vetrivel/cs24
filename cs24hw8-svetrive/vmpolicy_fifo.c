@@ -18,22 +18,16 @@
 /*============================================================================
  * "Node" Data Structure
  *
- * This data structure records all pages that are currently loaded in the
- * virtual memory, so that we can choose a random page to evict very easily.
+ * This data structure records pages that are currently loaded in the
+ * virtual memory as nodes. This way, we created a linked list allowing
+ * us to remove the first page easily.
  */
 
 typedef struct node_t {
-    /* The maximum number of pages that can be resident in memory at once. */
+    /* Represents one page */
     page_t page;
-
-    /* The number of pages that are currently loaded.  This can initially be
-     * less than max_resident.
-     */
+    /*Points to another page*/
     struct node_t *next;
-
-    /* This is the array of pages that are actually loaded.  Note that only the
-     * first "num_loaded" entries are actually valid.
-     */
 } node_t;
 
 
@@ -70,14 +64,18 @@ void policy_cleanup(void) {
  * virtual address space.  Record that the page is now resident.
  */
 void policy_page_mapped(page_t page) {
+    // Allocate memory for a node for a page
     node_t * n = (node_t *) malloc(sizeof(node_t));
+    // Intialize node
     n->page = page;
     n->next = NULL;
 
+    // If there are no nodes in our linked list
     if (head == NULL && tail == NULL) {
       head = n;
       tail = n;
     }
+    // Add to the end of our linked list
     else {
       tail->next = n;
       tail = n;
@@ -99,7 +97,7 @@ void policy_timer_tick(void) {
 page_t choose_and_evict_victim_page(void) {
     page_t victim = head->page;
 
-    /* Figure out which page to evict. */
+    /* Remove first page */
     node_t * first = head;
     head = head->next;
     free(first);

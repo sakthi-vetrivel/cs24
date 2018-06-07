@@ -18,23 +18,23 @@
 /*============================================================================
  * "Node" Data Structure
  *
- * This data structure records all pages that are currently loaded in the
- * virtual memory, so that we can choose a random page to evict very easily.
+ * This data structure records pages that are currently loaded in the
+ * virtual memory as nodes.
  */
 
 typedef struct node_t {
-    /* The maximum number of pages that can be resident in memory at once. */
+    /* Represents one page */
     page_t page;
-
-    /* The number of pages that are currently loaded.  This can initially be
-     * less than max_resident.
-     */
+    /*Points to another page*/
     struct node_t *next;
-
-    /* This is the array of pages that are actually loaded.  Note that only the
-     * first "num_loaded" entries are actually valid.
-     */
 } node_t;
+
+/*============================================================================
+ * "Queue" Data Structure
+ *
+ * This data structure records pages that are currently loaded in the
+ * virtual memory as a queue of nodes so we can easily remove the lest recently accessed page
+ */
 
 typedef struct queue_t {
     node_t * head;
@@ -72,14 +72,17 @@ void policy_cleanup(void) {
  * virtual address space.  Record that the page is now resident.
  */
 void policy_page_mapped(page_t page) {
+    // Allocate memory for a node for this page
     node_t * n = (node_t *) malloc(sizeof(node_t));
     n->page = page;
     n->next = NULL;
 
+    // If our queue is currently empty
     if (loaded.head == NULL && loaded.tail == NULL) {
         loaded.head = n;
         loaded.tail = n;
     }
+    // Add to end of queue
     else {
         loaded.tail->next = n;
         loaded.tail = n;
@@ -90,38 +93,56 @@ void policy_page_mapped(page_t page) {
 
 /* This function is called when the virtual memory system has a timer tick. */
 void policy_timer_tick(void) {
+
+    // Pointers for our while loop and to help us move around nodes in the queue
     node_t * curr = loaded.head;
     node_t * prev = NULL;
 
     node_t * old_tail = loaded.tail;
     node_t * next;
 
+    // While we haven't traversed through all elements in the queue
     while (prev != old_tail) {
+        // If we have accessed the page since the last tick
         if (is_page_accessed(curr->page)) {
+            // Clear the flag and set the permissions
             clear_page_accessed(curr->page);
             set_page_permission(curr->page, PAGEPERM_NONE);
 
+            // We want to move this node to the end of the queue
+
+            // This is not the last element in the queue
             if (curr->next) {
+                // It's also not the first element
                 if (prev) {
+                    // We skip over curr in the queue
                     prev->next = curr->next;
                 }
                 else {
+                    // The top of the queue moves to the next node
                     loaded.head = curr->next;
                 }
+                // We get the next node
                 next = curr->next;
+                // We set this next to null, since this will be the last node in the queue
                 curr->next = NULL;
+                // The last element is curr
                 loaded.tail->next = curr;
+                // Move the pointer
                 loaded.tail = curr;
+                // Move to the next element in the queue for our while loop
                 curr = next;
 
                 prev = curr;
                 curr = curr->next;
+
             }
             else {
                 break;
             }
         }
         else {
+            // Keep traversing through queue
             prev = curr;
             curr = curr->next;
         }
@@ -136,7 +157,7 @@ void policy_timer_tick(void) {
 page_t choose_and_evict_victim_page(void) {
     page_t victim = loaded.head->page;
 
-    /* Figure out which page to evict. */
+    /* Remove first node from queue (has not been accessed the longest). */
     node_t * first = loaded.head;
     loaded.head = loaded.head->next;
     free(first);
