@@ -1,5 +1,5 @@
 /*============================================================================
- * Implementation of the RANDOM page replacement policy.
+ * Implementation of the CLRU page replacement policy.
  *
  * We don't mind if paging policies use malloc() and free(), just because it
  * keeps things simpler.  In real life, the pager would use the kernel memory
@@ -16,26 +16,30 @@
 
 
 /*============================================================================
- * "Loaded Pages" Data Structure
+ * "Node" Data Structure
  *
  * This data structure records all pages that are currently loaded in the
  * virtual memory, so that we can choose a random page to evict very easily.
  */
 
-typedef struct loaded_pages_t {
+typedef struct node_t {
     /* The maximum number of pages that can be resident in memory at once. */
-    int max_resident;
+    page_t page;
 
     /* The number of pages that are currently loaded.  This can initially be
      * less than max_resident.
      */
-    int num_loaded;
+    struct node_t *next;
 
     /* This is the array of pages that are actually loaded.  Note that only the
      * first "num_loaded" entries are actually valid.
      */
-    page_t pages[];
-} loaded_pages_t;
+} node_t;
+
+typedef struct queue_t {
+    node_t * head;
+    node_t * tail;
+} queue_t;
 
 
 /*============================================================================
@@ -44,28 +48,23 @@ typedef struct loaded_pages_t {
 
 
 /* The list of pages that are currently resident. */
-static loaded_pages_t *loaded;
+static queue_t loaded;
 
 
 /* Initialize the policy.  Return nonzero for success, 0 for failure. */
 int policy_init(int max_resident) {
-    fprintf(stderr, "Using RANDOM eviction policy.\n\n");
+    fprintf(stderr, "Using CLOCK/LRU eviction policy.\n\n");
 
-    loaded = malloc(sizeof(loaded_pages_t) + max_resident * sizeof(page_t));
-    if (loaded) {
-        loaded->max_resident = max_resident;
-        loaded->num_loaded = 0;
-    }
+    loaded.head = NULL;
+    loaded.tail = NULL;
 
     /* Return nonzero if initialization succeeded. */
-    return (loaded != NULL);
+    return 1;
 }
 
 
 /* Clean up the data used by the page replacement policy. */
 void policy_cleanup(void) {
-    free(loaded);
-    loaded = NULL;
 }
 
 
@@ -73,15 +72,60 @@ void policy_cleanup(void) {
  * virtual address space.  Record that the page is now resident.
  */
 void policy_page_mapped(page_t page) {
-    assert(loaded->num_loaded < loaded->max_resident);
-    loaded->pages[loaded->num_loaded] = page;
-    loaded->num_loaded++;
+    node_t * n = (node_t *) malloc(sizeof(node_t));
+    n->page = page;
+    n->next = NULL;
+
+    if (loaded.head == NULL && loaded.tail == NULL) {
+        loaded.head = n;
+        loaded.tail = n;
+    }
+    else {
+        loaded.tail->next = n;
+        loaded.tail = n;
+    }
+    return;
 }
 
 
 /* This function is called when the virtual memory system has a timer tick. */
 void policy_timer_tick(void) {
-    /* Do nothing! */
+    node_t * curr = loaded.head;
+    node_t * prev = NULL;
+
+    node_t * old_tail = loaded.tail;
+    node_t * next;
+
+    while (prev != old_tail) {
+        if (is_page_accessed(curr->page)) {
+            clear_page_accessed(curr->page);
+            set_page_permission(curr->page, PAGEPERM_NONE);
+
+            if (curr->next) {
+                if (prev) {
+                    prev->next = curr->next;
+                }
+                else {
+                    loaded.head = curr->next;
+                }
+                next = curr->next;
+                curr->next = NULL;
+                loaded.tail->next = curr;
+                loaded.tail = curr;
+                curr = next;
+
+                prev = curr;
+                curr = curr->next;
+            }
+            else {
+                break;
+            }
+        }
+        else {
+            prev = curr;
+            curr = curr->next;
+        }
+    }
 }
 
 
@@ -90,18 +134,14 @@ void policy_timer_tick(void) {
  * page-replacement policy.
  */
 page_t choose_and_evict_victim_page(void) {
-    int i_victim;
-    page_t victim;
+    page_t victim = loaded.head->page;
 
     /* Figure out which page to evict. */
-    i_victim = rand() % loaded->num_loaded;
-    victim = loaded->pages[i_victim];
+    node_t * first = loaded.head;
+    loaded.head = loaded.head->next;
+    free(first);
+    first = NULL;
 
-    /* Shrink the collection of loaded pages now, by moving the last page in the
-     * collection into the spot that the victim just occupied.
-     */
-    loaded->num_loaded--;
-    loaded->pages[i_victim] = loaded->pages[loaded->num_loaded];
 
 #if VERBOSE
     fprintf(stderr, "Choosing victim page %u to evict.\n", victim);

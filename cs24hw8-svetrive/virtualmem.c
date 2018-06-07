@@ -42,7 +42,7 @@
 /*============================================================================
  * Global state for the virtual memory system.
  *
- * (Don't do this at home.  At the least, this should all be wrapped up into
+ * (Don't do this at home lmao. At the least this should all be wrapped up into
  * a single struct.)
  */
 
@@ -356,20 +356,20 @@ void * vmem_init(unsigned _max_resident) {
     /* Open the swap file */
     sprintf(swapfile, "/tmp/cs24_pagedev_%05d", getpid());
     fd_swapfile = open(swapfile, O_RDWR | O_CREAT, 0600);
-    if (fd_swapfile < 0) {
+    if (fd_swapfile == -1) {
         perror(swapfile);
         abort();
     }
 
     /* Immediately unlink it so it will go away when this process terminates */
-    if (unlink(swapfile) < 0) {
+    if (unlink(swapfile) == -1) {
         perror(swapfile);
         abort();
     }
 
     /* Extend the file to include the entire address space */
 
-    if (lseek(fd_swapfile, NUM_PAGES * PAGE_SIZE, SEEK_SET) < 0) {
+    if (lseek(fd_swapfile, NUM_PAGES * PAGE_SIZE, SEEK_SET) == -1) {
         perror("lseek");
         abort();
     }
@@ -389,7 +389,7 @@ void * vmem_init(unsigned _max_resident) {
     sigemptyset(&action.sa_mask);
     sigaddset(&action.sa_mask, SIGALRM);
 
-    if (sigaction(SIGSEGV, &action, (struct sigaction *) 0) < 0) {
+    if (sigaction(SIGSEGV, &action, (struct sigaction *) 0) == -1) {
         perror("sigaction(SIGSEGV)");
         exit(1);
     }
@@ -399,7 +399,7 @@ void * vmem_init(unsigned _max_resident) {
     memset(&action, 0, sizeof(action));
     action.sa_sigaction = sigalrm_handler;
     action.sa_flags = SA_SIGINFO | SA_ONSTACK;
-    if (sigaction(SIGALRM, &action, (struct sigaction *) 0) < 0) {
+    if (sigaction(SIGALRM, &action, (struct sigaction *) 0) == -1) {
         perror("sigaction(SIGALRM)");
         exit(1);
     }
@@ -409,7 +409,7 @@ void * vmem_init(unsigned _max_resident) {
     itimer.it_interval.tv_usec = TIMESLICE_USEC;
     itimer.it_value.tv_sec = TIMESLICE_SEC;
     itimer.it_value.tv_usec = TIMESLICE_USEC;
-    if (setitimer(ITIMER_REAL, &itimer, (struct itimerval *) 0) < 0) {
+    if (setitimer(ITIMER_REAL, &itimer, (struct itimerval *) 0) == -1) {
         perror("setitimer");
         exit(1);
     }
@@ -445,32 +445,33 @@ void map_page(page_t page, unsigned initial_perm) {
                 "= %u, max resident = %u\n", num_resident, max_resident);
         abort();
     }
+    //TODO ------------------------------------------------------------------------------
+     void * return_addr = mmap(page_to_addr(page), PAGE_SIZE,
+        PROT_READ | PROT_WRITE, MAP_FIXED | MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (return_addr != page_to_addr(page)) {
+        fprintf(stderr, "Return addr doesn't match address for page %d", page);
+        abort();
+    }
+    if (return_addr == MAP_FAILED) {
+        // Need to print out an error message here
+        abort();
+    }
 
-    /* ==== TODO:  IMPLEMENT =================================================
-     *
-     * This function must use mmap() to update the process' virtual address
-     * space to make the page's address range valid.  After this is done, the
-     * function must load the page's contents from the swap file.
-     *
-     * The mmap() call should use MAP_FIXED | MAP_SHARED | MAP_ANONYMOUS for
-     * the flags.  The return-address should be checked for errors (as
-     * described in the assignment), and it should also be checked against the
-     * input address (they should be the same, or an error should be
-     * reported).
-     *
-     * Once the page is mapped, the function can seek to the start of the
-     * page's corresponding slot in the swap-file using lseek(), and the
-     * data can be loaded using the read() function.  Make sure to verify the
-     * return-values of these functions, and report errors on failure, as
-     * described in the assignment.  This will aid in debugging, and it will
-     * also avoid unnecessary point-deductions.
-     *
-     * Finally, the page's Page Table Entry should initialized properly, and
-     * the page's permissions should be set appropriately.  (Keep in mind that
-     * your read() call will write to the page, so you must tell mmap() to
-     * allow reading and writing or else loading the page's contents will
-     * fail.)
-     */
+    if (lseek(fd_swapfile, page * PAGE_SIZE, SEEK_SET) == -1) {
+        perror("lseek");
+        abort();
+    }
+    int data_size = read(fd_swapfile, page_to_addr(page), PAGE_SIZE);
+    if (data_size == -1) {
+        perror("read");
+        abort();
+    }
+    if (data_size != PAGE_SIZE) {
+        fprintf(stderr, "Error! Read an unexpected number of bytes\n");
+        abort();
+    }
+    set_page_resident(page);
+    set_page_permission(page, initial_perm);
 
     assert(is_page_resident(page));  /* Now it should be mapped! */
     num_loads++;
@@ -494,30 +495,31 @@ void unmap_page(page_t page) {
     assert(num_resident > 0);
     assert(is_page_resident(page));
 
-    /* ==== TODO:  IMPLEMENT =================================================
-     *
-     * This function must use munmap() to remove the page's address range from
-     * the process' virtual address space.
-     *
-     * Before this can be done, however, the function must check if the page
-     * is dirty, and *only* if it is, save the page back to its corresponding
-     * slot in the swap file.  (If the function always saves pages back to
-     * disk, a significant deduction will be applied.)
-     *
-     * If the page is dirty, the function can seek to the start of the page's
-     * corresponding slot in the swap-file using lseek(), and then use the
-     * write() function to save the data into the swap file.  Make sure to
-     * verify the return-values of these functions, and report errors on
-     * failure, as described in the assignment.  This will aid in debugging,
-     * and it will also avoid unnecessary point-deductions.
-     *
-     * Note that when you are writing the page back to disk, you will be
-     * performing a read on the page.  Therefore, you may want to set the
-     * page's permissions to allow reading, so that the write() is able to
-     * complete successfully.
-     *
-     * Finally, the page's Page Table Entry should be cleared.
-     */
+    if(is_page_dirty(page)) {
+        set_page_permission(page, PAGEPERM_READ);
+
+        if (lseek(fd_swapfile, page * PAGE_SIZE, SEEK_SET) == -1) {
+            perror("lseek");
+            abort();
+        }
+
+        int data_size = write(fd_swapfile, page_to_addr(page), PAGE_SIZE);
+        if (data_size == -1) {
+            perror("write");
+            abort();
+        }
+        if (data_size != PAGE_SIZE) {
+            fprintf(stderr, "Error! Wrote an unexpected number of bytes\n");
+            abort();
+        }
+    }
+
+    if (munmap(page_to_addr(page), PAGE_SIZE) == -1) {
+        perror("munmap");
+        abort();
+    }
+
+    clear_page_entry(page);
 
     assert(!is_page_resident(page));
     num_resident--;
@@ -571,40 +573,42 @@ static void sigsegv_handler(int signum, siginfo_t *infop, void *data) {
      * this may result in some other page being unmapped.
      */
 
-    /* ==== TODO:  IMPLEMENT =================================================
-     *
-     * Examine the value of infop->si_code to determine if the corresponding
-     * page is simply unmapped (SEGV_MAPERR), or if the page is mapped but the
-     * access itself was not permitted (SEGV_ACCERR).
-     *
-     * If the address is unmapped (SEGV_MAPERR), you will need to map the
-     * corresponding page into memory.  Make sure to respect the physical
-     * memory constraints by evicting a page if there are already max_resident
-     * pages loaded.  You can do something like this to evict a page:
-     *
-     *     assert(num_resident <= max_resident);
-     *     if (num_resident == max_resident) {
-     *         page_t victim = choose_and_evict_victim_page();
-     *         assert(is_page_resident(victim));
-     *         unmap_page(victim);
-     *         assert(!is_page_resident(victim));
-     *     }
-     *
-     * Keep in mind that the new page will need its Page Table Entry (PTE)
-     * and permissions updated properly.
-     *
-     * If the address is mapped but an access violation occurred (SEGV_ACCERR),
-     * you can use the Page Table Entry helper functions to retrieve and update
-     * the page's PTE and permissions appropriately.  The set_page_permission()
-     * function is particularly useful; it will update the permission values in
-     * the page's PTE, as well as modifying the actual virtual-memory page
-     * permissions with a call to mprotect().
-     *
-     * As always, use assertions liberally!  If you have any errors, or you
-     * have points in the code that should never be reached, report an error
-     * and then call abort() so that your code will fail visibly.  This will
-     * greatly aid in debugging.
-     */
+     // Page is simply unmapped
+    if (infop->si_code == SEGV_MAPERR) {
+        assert(num_resident <= max_resident);
+        if (num_resident == max_resident) {
+            page_t victim = choose_and_evict_victim_page();
+            assert(is_page_resident(victim));
+            unmap_page(victim);
+            assert(! (is_page_resident(victim)));
+        }
+
+        map_page(page, PAGEPERM_READ);
+        set_page_accessed(page);
+    }
+    else {
+        assert(infop->si_code == SEGV_ACCERR);
+        pte_t pte = page_table[page];
+        assert(pte & PAGE_RESIDENT);
+
+        switch(pte & PAGEPERM_MASK) {
+            case PAGEPERM_NONE:
+                set_page_permission(page, PAGEPERM_READ);
+                set_page_accessed(page);
+                assert(get_page_permission(page) == PAGEPERM_READ);
+                assert(is_page_accessed(page));
+                break;
+            case PAGEPERM_READ:
+                set_page_dirty(page);
+                set_page_permission(page, PAGEPERM_RDWR);
+                assert(get_page_permission(page) == PAGEPERM_RDWR);
+                assert(is_page_dirty(page));
+                break;
+            default :
+                fprintf(stderr, "SEGV_ACCERR, but did not match cases\n");
+                abort();
+        }
+    }
 }
 
 
@@ -626,5 +630,3 @@ static void sigalrm_handler(int signum, siginfo_t *infop, void *data) {
      */
     policy_timer_tick();
 }
-
-
